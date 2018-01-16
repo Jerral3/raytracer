@@ -12,7 +12,7 @@ double Scene::intersect(const Ray& ray, Object** intersected, Vector* intersecti
 	double t = -1., s;
 
 	for (unsigned int i = 0; i < m_objects.size(); i++) {
-		if ((s = m_objects[i]->intersect(ray)) != -1) {
+		if ((s = m_objects[i]->intersect(ray.getOrigine(), ray.getDirection())) != -1) {
 			if (t == -1. || s < t) {
 				*intersected = m_objects[i];
 				t = s;
@@ -31,5 +31,5 @@ double Scene::intersect(const Ray& ray, Object** intersected, Vector* intersecti
 
 	Vector l = (1./distance) * lightDirection;
 
-	return std::fmax(0, dotProduct(l, normal))*light.getColor().getIntensity()/(distance*distance);
+	return std::fmax(0, dotProduct(l, normal))*light.getIntensity()/(distance*distance);
 }

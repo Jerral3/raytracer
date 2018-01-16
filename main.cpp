@@ -12,17 +12,17 @@
 int main(void)
 {
 	double radius = 10.;
-	Sphere* sphere = new Sphere(Vector(0, 0, 15), radius, Color(1., 1., 1.), false, false, 1.5, true);
+	Sphere sphere = Sphere::Diffuse(Vector(0, 0, 15), radius, Color::white());
 
-	Sphere* mur1 = new Sphere(Vector(0, 1000, 0), 940, Color(0., 0., 1.), false, false, 1., false);
-	Sphere* mur2 = new Sphere(Vector(0, 0, -1000), 940, Color(0., 1., 0.), false, false, 1., false);
-	Sphere* mur3 = new Sphere(Vector(0, -1000, 0), 990, Color(1., 0., 0.), false, false, 1., true);
-	Sphere* mur4 = new Sphere(Vector(0, 0, 1000), 940, Color(1., 1., 1.), false, false, 1., false);
+	Sphere mur1 = Sphere::Diffuse(Vector(0, 1000, 0), 940, Color::blue());
+	Sphere mur2 = Sphere::Diffuse(Vector(0, 0, -1000), 940, Color::green());
+	Sphere mur3 = Sphere::Diffuse(Vector(0, -1000, 0), 990, Color::red());
+	Sphere mur4 = Sphere::Diffuse(Vector(0, 0, 1000), 940, Color::white());
 
-	std::vector<Object*> spheres {sphere, mur1, mur2, mur3, mur4};
+	std::vector<Object*> spheres {&sphere, &mur1, &mur2, &mur3, &mur4};
 
-	double intensity = 100000000;
-	std::vector<Light> lights { Light(Vector(-10, 20, 40), Color(1., 1., 1., intensity)) };
+	double intensity = 500000000;
+	std::vector<Light> lights { Light(Vector(-10, 20, 40), intensity) };
 
 	Scene scene = Scene(lights, spheres);
 
@@ -33,10 +33,4 @@ int main(void)
 
 	tracer.draw();
 	tracer.save("output.bmp");
-
-	delete mur1;
-	delete mur2;
-	delete mur3;
-	delete mur4;
-	delete sphere;
 }

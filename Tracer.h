@@ -18,15 +18,17 @@ class Tracer {
 
 	unsigned char m_screen[SCREEN_HEIGHT][SCREEN_WIDTH][CHANNEL];
 
-	bool m_firstMonteCarlo;
-
 public:
-	Tracer(Vector& camera, double fov, Scene& scene): m_camera{camera}, m_fov{fov}, m_scene{scene}, m_screen{}, m_firstMonteCarlo{true} {}
+	Tracer(Vector& camera, double fov, Scene& scene): m_camera{camera}, m_fov{fov}, m_scene{scene}, m_screen{} {}
 
 	void draw();
+	Color getPixelColor(int i, int j);
 	Color getColor(const Ray&, const Light&,  int);
+	
 	Ray rebound(const Ray&, const Vector&, Object*) const;
 	Ray refract(const Ray&, const Vector&, Object*) const;
+	Ray antiAliasingRay(int i, int j) const;
+
 	void save(const char* filename) const;
 };
 

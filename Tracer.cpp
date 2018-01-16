@@ -1,97 +1,85 @@
 #include "Tracer.h"
 
 #include "config.h"
-
-#include <iostream>
-#include <cmath>
-
 #include "Vector.h"
 #include "Ray.h"
 #include "Object.h"
 
+#include <iostream>
+#include <cmath>
+#include <random>
+
+static std::default_random_engine engine;
+static std::uniform_real_distribution<double> distrib(0,1);
+
 void Tracer::draw()
 {
+	#pragma omp parallel for schedule(dynamic,1)
 	for (int i = 0; i < SCREEN_HEIGHT; i++) {
 		for (int j = 0; j < SCREEN_WIDTH; j++) {
-			Vector direction = Vector(j + 0.5 - SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - i - 0.5, -SCREEN_HEIGHT/(2.*tan(m_fov/2.)));
+			Color color = getPixelColor(i, j).gamma();
 
-			Ray ray = Ray(m_camera, direction);
-
-			for (Light light : m_scene.getLights())
-			{
-				m_firstMonteCarlo = true;
-				Color color = getColor(ray, light, RECURSION_LEVEL);
-
-				for (int k = 0; k < CHANNEL; ++k)
-					m_screen[i][j][k] = static_cast<unsigned char>(std::fmin(255., std::pow(color.getIntensity(k), 1/GAMMA)));
-			}
+			m_screen[i][j][0] = static_cast<unsigned char>(std::fmin(255., color.getIntensity(RED)));
+			m_screen[i][j][1] = static_cast<unsigned char>(std::fmin(255., color.getIntensity(GREEN)));
+			m_screen[i][j][2] = static_cast<unsigned char>(std::fmin(255., color.getIntensity(BLUE)));
 		}
 	}
 }
 
+Color Tracer::getPixelColor(int i, int j)
+{
+	Color color = Color::black();
+
+	for (Light light : m_scene.getLights())
+		for (int l = 0; l < MONTE_CARLO_N; ++l) {
+			Ray ray = antiAliasingRay(i, j);
+
+			color += (1./static_cast<float>(MONTE_CARLO_N)) * getColor(ray, light, RECURSION_LEVEL);
+		}
+
+	return color;
+}
+
 Color Tracer::getColor(const Ray& ray, const Light& light,  int r)
 {
-	if (!r) {
-		//std::cout << "Too many recursion level : ";
-		return Color();
-	}
+	Color color = Color::black();
+
+	if (!r)
+		return color;
 
 	double intensity  = -1.;
 	Object* intersected = nullptr;
 	Vector intersection = Vector(0., 0., 0.);
 
-	if ((intensity = m_scene.intersect(ray, &intersected, &intersection, light)) == -1.) {
-		//std::cout << "No object intersected" << std::endl;
-		return Color();
-	}
-
-	if (intersected->isMirror()) {
-		Color color = getColor(rebound(ray, intersection, intersected), light, --r);
-
-		return color.specular(intersected->getColor());
-	}
-
-	if (intersected->isTransparent()) {
-		Ray refracted = refract(ray, intersection, intersected);
-
-		Color color = getColor(refracted, light, --r);
-
+	if ((intensity = m_scene.intersect(ray, &intersected, &intersection, light)) == -1.)
 		return color;
-	}
 
-	if (intersected->isDiffuse()) {  // TODO:: éclairage direct
-		//Color color = intersected->getColor();
-		Color color = Color();
+	Vector normal = intersected->normal(intersection).normalize();
 
-		int n = (m_firstMonteCarlo) ? MONTE_CARLO_N : 1;
-		m_firstMonteCarlo = false;
-		Vector normal = intersected->normal(intersection).normalize();
+	if (intersected->isMirror())
+		return getColor(rebound(ray, intersection, intersected), light, --r).specular(intersected->getColor());
 
-		for (int i = 0; i < n; ++i) {
-			Vector l = intersected->monteCarloVector(intersection);
-			Ray monteCarlo = Ray(intersection + EPSILON*normal, l);
+	if (intersected->isTransparent())
+		return getColor(refract(ray, intersection, intersected), light, --r);
 
-			Color color1 = getColor(monteCarlo, light, r - 1);
-
-			//std::cout << "Inside loop : "; color1.print(); std::cout << std::endl;
-			color += color1;
-		}
-
-		//((static_cast<float>(COEFF_DIFFUS)/n)*color).print();
-
-		return (static_cast<float>(COEFF_DIFFUS)/n) * color;
-	}
-
-	Color color = Color(intersected->getColor(), intensity);
+	color += (intensity/M_PI)*intersected->getColor();
 
 	Vector nextIntersection = Vector(0., 0., 0.);
-	Vector origine = intersection + EPSILON*intersected->normal(intersection);
+	Object* nextIntersected = nullptr;
+	Vector origine = intersection + EPSILON*normal;
 	Ray    nextRay = Ray(origine, light.getOrigine() - origine);
 
-	if ((intensity = m_scene.intersect(nextRay, &intersected, &nextIntersection, light)) == -1.)
-		return color;
+	if ((intensity = m_scene.intersect(nextRay, &nextIntersected, &nextIntersection, light)) == -1.)
+		;
 	else if (squaredNorm(nextIntersection - light.getOrigine()) > squaredNorm(nextIntersection - intersection))
-		return Color();
+		color = Color::black();
+
+	if (intersected->isDiffuse()) {
+		Vector l = intersected->monteCarloVector(intersection);
+		Ray monteCarlo = Ray(intersection + EPSILON*normal, l);
+
+		color += getColor(monteCarlo, light, r - 1).specular(intersected->getColor());
+	}
 
 	return color;
 }
@@ -127,9 +115,19 @@ Ray Tracer::refract(const Ray& ray, const Vector& point, Object* intersected) co
 	return Ray(point - EPSILON*n, tangent + normal);
 }
 
-//Vector n = intersected->normal(point);
-//double p = abs(dotProduct(n, ray.getOrigine()))/M_PI; 
+Ray Tracer::antiAliasingRay(int i, int j) const
+{
+	double r1 = distrib(engine);
+	double r2 = distrib(engine);
+	double l = std::sqrt(-2 * std::log(r1));
 
+	double dx = l*std::cos(2*M_PI*r2);
+	double dy = l*std::sin(2*M_PI*r2);
+
+	Vector direction = Vector(j + 0.5 - SCREEN_WIDTH/2 + dx, SCREEN_HEIGHT/2 - i - 0.5 - dy, -SCREEN_HEIGHT/(2.*tan(m_fov/2.)));
+
+	return Ray(m_camera, direction);
+}
 
 void Tracer::save(const char* filename) const // (0,0) is top-left corner
 {

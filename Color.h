@@ -6,27 +6,26 @@ class Color {
 	double m_green;
 	double m_blue;
 
-	double m_intensity;
-
 public:
-	Color(double red = 0., double green = 0., double blue = 0., double intensity = 1.): m_red{red}, m_green{green}, m_blue{blue}, m_intensity{intensity} {}
-	Color(Color color, double intensity): m_red{color.m_red}, m_green{color.m_green}, m_blue{color.m_blue}, m_intensity{intensity} {}
+	Color(double red, double green, double blue): m_red{red}, m_green{green}, m_blue{blue} {}
+
+	static Color black() { return Color(0., 0., 0.); }
+	static Color red() { return Color(1., 0., 0.); }
+	static Color green() { return Color(0., 1., 0.); }
+	static Color blue() { return Color(0., 0., 1.); }
+	static Color white() { return Color(1., 1., 1.); }
 
 	Color& operator+=(const Color&);
 	Color& operator*=(double l);
 
-	Color specular(const Color&);
-
-	double red() const { return m_red; }
-	double green() const { return m_green; }
-	double blue() const { return m_blue; }
+	Color& specular(const Color&);
+	Color& gamma();
 
 	double getIntensity(int) const;
-	double getIntensity() const { return m_intensity; }
 
 	void print();
 };
 
-Color operator*(double, Color&);
+Color operator*(double, Color);
 
 #endif

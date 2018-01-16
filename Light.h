@@ -2,18 +2,16 @@
 #define LIGHT_HEADER
 
 #include "Vector.h"
-#include "Color.h"
 
 class Light {
 	Vector m_origine;
-
-	Color m_color;
+	double m_intensity;
 
 public:
-	Light(Vector origine, Color color): m_origine{origine}, m_color(color) {}
+	Light(Vector origine, double intensity): m_origine{origine}, m_intensity(intensity) {}
 
 	Vector getOrigine() const { return m_origine; }
-	Color getColor() const { return m_color; }
+	double getIntensity() const { return m_intensity; }
 };
 
 #endif

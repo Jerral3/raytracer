@@ -4,16 +4,49 @@
 
 #include <cmath>
 
+Sphere Sphere::Specular(Vector center, double radius, Color color)
+{
+	Sphere sphere = Sphere(center, radius, color);
+	sphere.makeSpecular();
+
+	return sphere;
+}
+
+Sphere Sphere::Mirror(Vector center, double radius, Color color)
+{
+	Sphere sphere = Sphere(center, radius, color);
+	sphere.makeMirror();
+
+	return sphere;
+}
+
+Sphere Sphere::Transparent(Vector center, double radius, Color color, double indice)
+{
+	Sphere sphere = Sphere(center, radius, color);
+	sphere.makeTransparent(indice);
+
+	return sphere;
+}
+
+Sphere Sphere::Diffuse(Vector center, double radius, Color color)
+{
+	Sphere sphere = Sphere(center, radius, color);
+	sphere.makeDiffuse();
+
+	return sphere;
+}
+
+
 Vector Sphere::normal(const Vector& point) const
 {
 	return (1./m_radius) * (point - m_center);
 }
 
-double Sphere::intersect(const Ray& ray) const
+double Sphere::intersect(const Vector& origine, const Vector& direction) const
 {
-	double a = ray.getDirection().squaredNorm();
-	double b = 2*dotProduct(ray.getDirection(), ray.getOrigine() - m_center);
-	double c = squaredNorm(ray.getOrigine() - m_center) - m_radius*m_radius;
+	double a = direction.squaredNorm();
+	double b = 2*dotProduct(direction, origine - m_center);
+	double c = squaredNorm(origine - m_center) - m_radius*m_radius;
 
 	double delta = b*b - 4*a*c;
 
