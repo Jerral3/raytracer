@@ -117,12 +117,16 @@ Ray Tracer::refract(const Ray& ray, const Vector& point, Object* intersected) co
 
 Ray Tracer::antiAliasingRay(int i, int j) const
 {
+#if ANTIALIASING == 1
 	double r1 = distrib(engine);
 	double r2 = distrib(engine);
 	double l = std::sqrt(-2 * std::log(r1));
 
 	double dx = l*std::cos(2*M_PI*r2);
 	double dy = l*std::sin(2*M_PI*r2);
+#else
+	double dx = 0, dy = 0;
+#endif
 
 	Vector direction = Vector(j + 0.5 - SCREEN_WIDTH/2 + dx, SCREEN_HEIGHT/2 - i - 0.5 - dy, -SCREEN_HEIGHT/(2.*tan(m_fov/2.)));
 

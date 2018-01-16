@@ -14,3 +14,4 @@
 #define N_AIR 1
 
 #define MONTE_CARLO_N 20
+#define ANTIALIASING 1
