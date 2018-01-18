@@ -6,18 +6,18 @@
 static std::default_random_engine engine;
 static std::uniform_real_distribution<double> distrib(0,1);
 
-Base Object::getBaseAt(const Vector& point) const
+Base Object::getBaseAt(Vector x) const
 {
-	Vector x = normal(point).normalize();
+	x.normalize();
 	Vector y = x.orthogonal().normalize();
 	Vector z = (x ^ y).normalize();
 
 	return Base {x, y, z};
 }
 
-Vector Object::monteCarloVector(const Vector& point) const
+Vector Object::monteCarloVector(const Vector& direction) const
 {
-	Base base = getBaseAt(point);
+	Base base = getBaseAt(direction);
 
 	double r1 = distrib(engine);
 	double r2 = distrib(engine);

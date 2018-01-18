@@ -3,8 +3,6 @@
 
 #include "Vector.h"
 
-#include <cmath>
-
 class Ray {
 	Vector m_origine;
 	Vector m_direction;

@@ -11,7 +11,10 @@
 
 int main(void)
 {
+	double intensity = 500000000;
 	double radius = 10.;
+
+	Sphere lum    = Sphere::Emissive(Vector(-10, 20, 40), 10, Color::white(), intensity);
 	Sphere sphere = Sphere::Diffuse(Vector(0, 0, 15), radius, Color::white());
 
 	Sphere mur1 = Sphere::Diffuse(Vector(0, 1000, 0), 940, Color::blue());
@@ -19,10 +22,11 @@ int main(void)
 	Sphere mur3 = Sphere::Diffuse(Vector(0, -1000, 0), 990, Color::red());
 	Sphere mur4 = Sphere::Diffuse(Vector(0, 0, 1000), 940, Color::white());
 
-	std::vector<Object*> spheres {&sphere, &mur1, &mur2, &mur3, &mur4};
+	//std::vector<Object*> spheres {&sphere, &mur1, &mur2, &mur3, &mur4};
+	//std::vector<Light*> lights { new Light(Vector(-10, 20, 40), intensity) , new Light(Vector(10, 20, 40), intensity) };
 
-	double intensity = 500000000;
-	std::vector<Light> lights { Light(Vector(-10, 20, 40), intensity) };
+	std::vector<Object*> spheres {&lum, &sphere, &mur1, &mur2, &mur3, &mur4};
+	std::vector<Light*> lights {};
 
 	Scene scene = Scene(lights, spheres);
 

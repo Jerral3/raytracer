@@ -16,13 +16,15 @@ public:
 	static Sphere Mirror(Vector center, double radius, Color color = Color::black());
 	static Sphere Transparent(Vector center, double radius, Color color = Color::black(), double indice = 1.);
 	static Sphere Diffuse(Vector center, double radius, Color color = Color::black());
+	static Sphere Emissive(Vector center, double radius, Color color = Color::black(), double intensity = 1000.);
 
 	Vector getCenter() const { return m_center; }
 	double getRadius() const { return m_radius; }
 
 	Vector normal(const Vector&) const;
-
 	double intersect(const Vector&, const Vector&) const;
+	double area() const;
+    Vector randomPointAround(const Vector&) const;
 };
 
 #endif

@@ -36,6 +36,13 @@ Sphere Sphere::Diffuse(Vector center, double radius, Color color)
 	return sphere;
 }
 
+Sphere Sphere::Emissive(Vector center, double radius, Color color, double intensity)
+{
+	Sphere sphere = Sphere(center, radius, color);
+	sphere.makeEmissive(intensity);
+
+	return sphere;
+}
 
 Vector Sphere::normal(const Vector& point) const
 {
@@ -60,4 +67,17 @@ double Sphere::intersect(const Vector& origine, const Vector& direction) const
 		return (-b + sqrt(delta))/(2.*a);
 
 	return (-b - sqrt(delta))/(2.*a);
+}
+
+double Sphere::area() const 
+{
+	return (4*M_PI);
+	//return (4*M_PI*m_radius*m_radius);
+}
+
+Vector Sphere::randomPointAround(const Vector& direction) const
+{
+	Vector wi = monteCarloVector(direction).normalize();
+
+	return getCenter() + m_radius * wi;
 }

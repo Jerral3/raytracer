@@ -17,6 +17,10 @@ protected:
 public:
 	virtual Vector normal(const Vector&) const = 0;
     virtual double intersect(const Vector&, const Vector&) const = 0;
+    virtual double area() const = 0;
+    virtual Vector getCenter() const = 0;
+    virtual Vector randomPointAround(const Vector&) const = 0;
+
 
     Object(Color color = Color::black()): m_color{color}, m_mirror{false}, m_transparency{false}, m_indice{1.}, m_diffuse{false}, m_emissive{false}, m_intensity{0.} {}
     virtual ~Object() = default;
@@ -33,9 +37,9 @@ public:
     double getIndice() const { return m_indice; }
     bool isDiffuse() const { return m_diffuse; }
     bool isEmissive() const { return m_emissive; }
-    double getIntensity() const { return m_intensity; }
+    double getIntensity() const { return m_intensity / area(); }
 
-    Base getBaseAt(const Vector&) const;
+    Base getBaseAt(Vector) const;
     Vector monteCarloVector(const Vector&) const;
 };
 
