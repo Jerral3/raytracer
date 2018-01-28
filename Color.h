@@ -17,6 +17,7 @@ public:
 
 	Color& operator+=(const Color&);
 	Color& operator*=(double l);
+	bool operator==(Color v) const { return m_blue == v.m_blue && m_red == v.m_red && m_green == v.m_green;  }
 
 	Color& specular(const Color&);
 	Color& gamma();

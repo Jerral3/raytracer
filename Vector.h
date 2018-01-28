@@ -20,6 +20,12 @@ public:
 	Vector& operator*=(const double l) { m_x *= l,   m_y *= l,   m_z *= l;   return *this;  }
 	Vector& operator/=(const double l) { m_x /= l,   m_y /= l,   m_z /= l;   return *this; }
 	Vector& operator^=(const Vector& v);
+	bool operator==(Vector v) const { return m_x == v.m_x && m_y == v.m_y && m_z == v.m_z;  }
+	bool operator<(Vector v) const { return m_x < v.m_x && m_y < v.m_y && m_z < v.m_z; }
+
+	double x() const { return m_x; }
+	double y() const { return m_y; }
+	double z() const { return m_z; }
 
 	Vector orthogonal() const;
 	Vector& normalize();
@@ -36,5 +42,8 @@ Vector operator^(Vector v, Vector w);
 
 double squaredNorm(const Vector& v);
 double dotProduct(const Vector& v, const Vector& w);
+
+Vector max(const Vector&, const Vector&);
+Vector min(const Vector&, const Vector&);
 
 #endif

@@ -49,24 +49,36 @@ Vector Sphere::normal(const Vector& point) const
 	return (1./m_radius) * (point - m_center);
 }
 
-double Sphere::intersect(const Vector& origine, const Vector& direction) const
+double Sphere::intersect(const Vector& origine, const Vector& direction, Vector* n, Vector* point, Color* color) const
 {
-	double a = direction.squaredNorm();
-	double b = 2*dotProduct(direction, origine - m_center);
-	double c = squaredNorm(origine - m_center) - m_radius*m_radius;
+	Vector lightDir = origine - m_center;
 
-	double delta = b*b - 4*a*c;
+	// assumes direction is normalized: a = 1
+	double b = 2*dotProduct(direction, lightDir);
+	double c = squaredNorm(lightDir) - m_radius*m_radius;
+
+	double delta = b*b - 4.*c;
 
 	if (delta < 0)     // No intersection
-		return -1;
+		return -1.;
 
-	if (sqrt(delta) < b)  // Intersections are all behind the cam
-		return -1;
+	double root = sqrt(delta);
 
-	if (sqrt(delta) > -b) // Min intersection is behind the cam
-		return (-b + sqrt(delta))/(2.*a);
+	if (root < b)  // Intersections are all behind the cam
+		return -1.;
 
-	return (-b - sqrt(delta))/(2.*a);
+	double t;
+
+	if (root > -b) // Min intersection is behind the cam
+		t = (-b + root)/2.;
+	else
+		t = (-b - root)/2.;
+
+	*point = origine + t*direction;
+	*n     = normal(*point);
+	*color = m_color;
+
+	return t;
 }
 
 double Sphere::area() const 

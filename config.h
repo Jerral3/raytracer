@@ -6,8 +6,9 @@
 #define SCREEN_WIDTH 1024
 #define CHANNEL 3
 
-#define RECURSION_LEVEL 5
-#define EPSILON 0.01
+#define RECURSION_LEVEL 3
+#define RECURSION_BOXES 30
+#define EPSILON 0.1
 
 #define GAMMA 2.2
 

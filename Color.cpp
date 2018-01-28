@@ -53,9 +53,11 @@ Color& Color::specular(const Color& color)
 
 Color& Color::gamma()
 {
-	m_red   = std::pow(m_red,   1/GAMMA);
-	m_blue  = std::pow(m_blue,  1/GAMMA);
-	m_green = std::pow(m_green, 1/GAMMA);
+	double gamma = 1./GAMMA;
+
+	m_red   = std::pow(m_red,   gamma);
+	m_blue  = std::pow(m_blue,  gamma);
+	m_green = std::pow(m_green, gamma);
 
 	return *this;
 }

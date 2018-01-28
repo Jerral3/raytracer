@@ -22,7 +22,7 @@ public:
 	double getRadius() const { return m_radius; }
 
 	Vector normal(const Vector&) const;
-	double intersect(const Vector&, const Vector&) const;
+	double intersect(const Vector&, const Vector&, Vector*, Vector*, Color*) const;
 	double area() const;
     Vector randomPointAround(const Vector&) const;
 };

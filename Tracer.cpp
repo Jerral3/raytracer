@@ -23,6 +23,9 @@ void Tracer::draw()
 			m_screen[i][j][1] = static_cast<unsigned char>(std::fmin(255., color.getIntensity(GREEN)));
 			m_screen[i][j][2] = static_cast<unsigned char>(std::fmin(255., color.getIntensity(BLUE)));
 		}
+		
+		//#pragma omp critical
+        //std::cout << "Approx. progress : " << (int)(i * 100 / SCREEN_HEIGHT) << " % ";
 	}
 }
 
@@ -37,7 +40,7 @@ Color Tracer::getPixelColor(int i, int j)
 			color += (1./static_cast<float>(MONTE_CARLO_N)) * getColor(ray, light, RECURSION_LEVEL);
 		}
 
-		color += (1./static_cast<float>(MONTE_CARLO_N)) * getColor(ray, nullptr, RECURSION_LEVEL);
+		//color += (1./static_cast<float>(MONTE_CARLO_N)) * getColor(ray, nullptr, RECURSION_LEVEL);
 	}
 
 	return color;
@@ -45,67 +48,60 @@ Color Tracer::getPixelColor(int i, int j)
 
 Color Tracer::getColor(const Ray& ray, const Light* light,  int r)
 {
-	Color color = Color::black();
+	Color color  = Color::black();
+	Color cInter = Color::black();
 
 	if (!r)
 		return color;
 
 	Object* intersected = nullptr;
-	Vector intersection = Vector(0., 0., 0.);
+	Vector intersection = Vector(0., 0., 0.), normal = Vector(0., 0., 0.);
 
-	if (!m_scene.intersect(ray, &intersected, &intersection))
+	if (!m_scene.intersect(ray, &intersected, &normal, &intersection, &cInter))
 		return color;
 
 	if (intersected->isMirror())
-		return getColor(rebound(ray, intersection, intersected), light, --r).specular(intersected->getColor());
+		return getColor(rebound(ray, normal, intersection), light, --r).specular(cInter);
 
 	if (intersected->isTransparent())
-		return getColor(refract(ray, intersection, intersected), light, --r);
-
-	if (intersected->isEmissive())
-		color += intersected->getIntensity() * intersected->getColor();
-
-	Vector normal = intersected->normal(intersection).normalize();
+		return getColor(refract(ray, normal,  intersection, intersected), light, --r);
 
 	if (light != nullptr)
-		color += directLighting(intersection, intersected, light);
+		color += directLighting(normal, intersection, light) * cInter;
 	else
-		color += directLighting(intersection, intersected);
+		color += directLighting(normal, intersection, intersected) * cInter;
 
 	if (intersected->isDiffuse()) {
-		Vector l = intersected->monteCarloVector(intersected->normal(intersection));
+		Vector l = intersected->monteCarloVector(normal);
 		Ray monteCarlo = Ray(intersection + EPSILON*normal, l);
 
-		color += getColor(monteCarlo, light, r - 1).specular(intersected->getColor());
+		color += getColor(monteCarlo, light, r - 1).specular(cInter);
 	}
 
 	return color;
 }
 
-Color Tracer::directLighting(const Vector& intersection, const Object* intersected, const Light* light) const
+double Tracer::directLighting(const Vector& normal, const Vector& intersection, const Light* light) const
 {
-	Vector normal = intersected->normal(intersection).normalize();
-	double intensity = m_scene.intensity(intersected, intersection, light);
+	double intensity = m_scene.intensity(normal, intersection, light) / M_PI;
 
-	Color color = (intensity/M_PI)*intersected->getColor();
-
-	Vector nextIntersection = Vector(0., 0., 0.);
+	Vector nextIntersection = Vector(0., 0., 0.), nextNormal = Vector(0., 0., 0.);
 	Object* nextIntersected = nullptr;
+	Color color = Color::black();
 	Vector origine = intersection + EPSILON*normal;
 	Ray    nextRay = Ray(origine, light->getOrigine() - origine);
 
-	if (!m_scene.intersect(nextRay, &nextIntersected, &nextIntersection))
+	if (!m_scene.intersect(nextRay, &nextIntersected, &nextNormal, &nextIntersection, &color))
 		;
 	else if (squaredNorm(nextIntersection - light->getOrigine()) > squaredNorm(nextIntersection - intersection))
-		color = Color::black();
+		intensity = 0;
 
-	return color;
+	return intensity;
 }
 
-Color Tracer::directLighting(const Vector& x, const Object* intersected) const
+double Tracer::directLighting(const Vector& normal, const Vector& x, const Object* intersected) const
 {
-	Color color = Color::black();
-	Vector normal = intersected->normal(x).normalize();
+	double intensity = 0.;
 
 	for (Object* light : m_scene.getObjects()) {
 		if (!light->isEmissive() || light == intersected)
@@ -119,12 +115,14 @@ Color Tracer::directLighting(const Vector& x, const Object* intersected) const
 
 		Ray rayon = Ray(x + EPSILON*normal, w);
 		Object* nextIntersected = nullptr;
-		Vector nextIntersection = Vector(0., 0., 0.);
+		Vector nextIntersection = Vector(0., 0., 0.), nextNormal = Vector(0., 0., 0.);
+		Color color = Color::black();
 
-		if (!m_scene.intersect(rayon, &nextIntersected, &nextIntersection))
+		if (!m_scene.intersect(rayon, &nextIntersected, &nextNormal, &nextIntersection, &color))
 			;
-		else if (squaredNorm(nextIntersection - x) < d)
+		else if (squaredNorm(nextIntersection - x) < d - 0.2) {
 			continue;
+		}
 
 		Vector nprime   = light->normal(xprime);
 		double cosinus  = std::fmax(0., dotProduct(w, normal));
@@ -132,23 +130,20 @@ Color Tracer::directLighting(const Vector& x, const Object* intersected) const
 
 		double denom = d * dotProduct(nprime, lightDir);
 
-		color += (light->getIntensity() * cosinus * cosprime / denom) * intersected->getColor();
+		intensity += (light->getIntensity() * cosinus * cosprime / denom);
 	}
 
-	return color;
+	return intensity;
 }
 
-Ray Tracer::rebound(const Ray& ray, const Vector& point, Object* intersected) const
+Ray Tracer::rebound(const Ray& ray, const Vector& n, const Vector& point) const
 {
-	Vector n = intersected->normal(point);
-
 	return Ray(point + EPSILON*n, ray.getDirection() - 2*dotProduct(ray.getDirection(), n)*n);
 }
 
-Ray Tracer::refract(const Ray& ray, const Vector& point, Object* intersected) const
+Ray Tracer::refract(const Ray& ray, const Vector& normal, const Vector& point,  Object* intersected) const
 {
-	Vector n  = intersected->normal(point);
-	n *= (1/sqrt(n.squaredNorm()));
+	Vector n = normal;
 	double nn = N_AIR/intersected->getIndice();
 
 	if (dotProduct(ray.getDirection(), n) > 0) {
@@ -160,13 +155,13 @@ Ray Tracer::refract(const Ray& ray, const Vector& point, Object* intersected) co
 
 	if (subSqrt < 0) {
 		std::cout << "Total reflex" << std::endl;
-		return rebound(ray, point, intersected);
+		return rebound(ray, normal, point);
 	}
 
 	Vector tangent = + nn * ray.getDirection() - nn * dotProduct(ray.getDirection(), n) * n;
-	Vector normal  = - sqrt(subSqrt) * n;
+	Vector normalR  = - sqrt(subSqrt) * n;
 
-	return Ray(point - EPSILON*n, tangent + normal);
+	return Ray(point - EPSILON*n, tangent + normalR);
 }
 
 Ray Tracer::antiAliasingRay(int i, int j) const

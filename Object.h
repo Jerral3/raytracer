@@ -16,7 +16,7 @@ protected:
 
 public:
 	virtual Vector normal(const Vector&) const = 0;
-    virtual double intersect(const Vector&, const Vector&) const = 0;
+    virtual double intersect(const Vector&, const Vector&, Vector*, Vector*, Color*) const = 0;
     virtual double area() const = 0;
     virtual Vector getCenter() const = 0;
     virtual Vector randomPointAround(const Vector&) const = 0;

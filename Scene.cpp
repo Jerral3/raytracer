@@ -7,14 +7,19 @@
 #include <cmath>
 #include <iostream>
 
-bool Scene::intersect(const Ray& ray, Object** intersected, Vector* intersection) const
+bool Scene::intersect(const Ray& ray, Object** intersected, Vector* nInter, Vector* intersection, Color* color) const
 {
 	double t = -1., s;
+	Vector n = Vector(0., 0., 0.), point = Vector(0., 0., 0.);
+	Color c = Color::black();
 
 	for (Object* object : m_objects) {
-		if ((s = object->intersect(ray.getOrigine(), ray.getDirection())) != -1) {
+		if ((s = object->intersect(ray.getOrigine(), ray.getDirection(), &n, &point, &c)) != -1) {
 			if (t == -1. || s < t) {
-				*intersected = object;
+				*intersected  = object;
+				*intersection = point;
+				*nInter       = n;
+				*color        = c;
 				t = s;
 			}
 		}
@@ -23,14 +28,11 @@ bool Scene::intersect(const Ray& ray, Object** intersected, Vector* intersection
 	if (t == -1.)
 		return false;
 
-	*intersection = ray.getOrigine() + t*ray.getDirection();
-
 	return true;
 }
 
-double Scene::intensity(const Object* intersected, const Vector& intersection, const Light* light) const
+double Scene::intensity(const Vector& normal, const Vector& intersection, const Light* light) const
 {
-	Vector normal         = intersected->normal(intersection);
 	Vector lightDirection = light->getOrigine() - intersection;
 
 	double distance = sqrt(squaredNorm(lightDirection));

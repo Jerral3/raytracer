@@ -24,11 +24,11 @@ public:
 	void draw();
 	Color getPixelColor(int i, int j);
 	Color getColor(const Ray&, const Light*,  int);
-	Color directLighting(const Vector&, const Object*) const;
-	Color directLighting(const Vector&, const Object*, const Light*) const;
+	double directLighting(const Vector&, const Vector&, const Object*) const;
+	double directLighting(const Vector&, const Vector&, const Light*) const;
 	
-	Ray rebound(const Ray&, const Vector&, Object*) const;
-	Ray refract(const Ray&, const Vector&, Object*) const;
+	Ray rebound(const Ray&, const Vector&, const Vector&) const;
+	Ray refract(const Ray&, const Vector&, const Vector&,  Object*) const;
 	Ray antiAliasingRay(int i, int j) const;
 
 	void save(const char* filename) const;
