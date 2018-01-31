@@ -104,12 +104,13 @@ Vector Mesh::normal(const Point& point) const
 	return point - m_origine;
 }
 
-double Mesh::intersect(const Point& origine, const Vector& direction, Vector* normal, Point* inter, Color* color) const
+double Mesh::intersect(const Point& origine, const Vector& direction, Intersection& intersection) const
 {
 	Vector texture = Vector();
-	double t = m_box.intersect(origine, direction, normal, inter, &texture);
-	
-	*color = getColorTexture(texture);
+	double t = m_box.intersect(origine, direction, intersection, &texture);
+
+	intersection.intersected = this;
+	intersection.color       = getColorTexture(texture);
 
 	return t;
 }
@@ -219,23 +220,22 @@ bool Box::intersect(const Point& origine, const Vector& direction) const
 	return false;
 }
 
-double Box::intersect(const Point& origine, const Vector& direction, Vector* normal, Point* inter, Vector* texture) const
+double Box::intersect(const Point& origine, const Vector& direction, Intersection& intersection, Vector* texture) const
 {
 	if (!intersect(origine, direction))
 		return -1.;
 
 	double t = -1.;
+	Intersection localIntersection;
 
 	if (m_boxes[0] == nullptr) {
 		double s;
-		Vector n = Vector(), text = Vector();
-		Point point = Point();
+		Vector text = Vector();
 
 		for (Triangle face : m_faces) {
-			if ((s = face.intersect(origine, direction, &n, &point, &text)) != -1) {
+			if ((s = face.intersect(origine, direction, localIntersection, &text)) != -1) {
 				if (t == -1. || s < t) {
-					*inter   = point;
-					*normal  = n;
+					intersection = localIntersection;
 					*texture = text;
 					t = s;
 				}
@@ -246,14 +246,12 @@ double Box::intersect(const Point& origine, const Vector& direction, Vector* nor
 	}
 
 	double s;
-	Vector n = Vector(), text = Vector();
-	Point point = Point();
+	Vector text = Vector();
 
 	for (auto box : m_boxes) {
-		if ((s = box->intersect(origine, direction, &n, &point, &text)) != -1.) {
+		if ((s = box->intersect(origine, direction, localIntersection, &text)) != -1.) {
 			if (t == -1 || s < t) {
-				*inter   = point;
-				*normal  = n;
+				intersection = localIntersection;
 				*texture = text;
 				t = s;
 			}

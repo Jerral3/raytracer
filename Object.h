@@ -3,7 +3,10 @@
 
 #include "Vector.h"
 #include "Color.h"
+#include "Intersection.h"
 #include "Animatable.h"
+
+class Intersection;
 
 class Object: public Animatable {
 protected:
@@ -17,7 +20,7 @@ protected:
 
 public:
 	virtual Vector normal(const Point&) const = 0;
-    virtual double intersect(const Point&, const Vector&, Vector*, Point*, Color*) const = 0;
+    virtual double intersect(const Point&, const Vector&, Intersection&) const = 0;
     virtual double area() const = 0;
     virtual Point center() const = 0;
     virtual Point randomPointAround(const Vector&) const = 0;

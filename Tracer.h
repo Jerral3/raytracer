@@ -28,7 +28,7 @@ public:
 	double directLighting(const Vector&, const Point&, const Light*) const;
 	
 	Ray rebound(const Ray&, const Vector&, const Point&) const;
-	Ray refract(const Ray&, const Vector&, const Point&,  Object*) const;
+	Ray refract(const Ray&, const Vector&, const Point&, const Object*) const;
 
 	double phong(const Vector&, const Ray&, const Vector&, const Point&, double) const; 
 

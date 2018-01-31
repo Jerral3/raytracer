@@ -17,7 +17,7 @@
 
 #define RECURSION_LEVEL 3
 #define RECURSION_BOXES 30
-#define MONTE_CARLO_N 5
+#define MONTE_CARLO_N 20
 
 #define EPSILON 0.1
 #define GAMMA 2.2

@@ -5,6 +5,7 @@
 #include "Object.h"
 #include "Color.h"
 #include "Triangle.h"
+#include "Intersection.h"
 
 #include <vector>
 
@@ -26,7 +27,7 @@ public:
 	inline bool contain(Triangle&) const;
 
 	bool intersect(const Point&, const Vector&) const;
-	double intersect(const Point&, const Vector&, Vector*, Point*, Vector*) const;
+	double intersect(const Point&, const Vector&, Intersection&, Vector*) const;
 };
 
 class Mesh : public Object {
@@ -48,7 +49,7 @@ public:
 	Color  getColorTexture(Vector&) const;
 
 	Vector normal(const Point&) const;
-	double intersect(const Point&, const Vector&, Vector*, Point*, Color*) const;
+	double intersect(const Point&, const Vector&, Intersection&) const;
 	double area() const;
     Point randomPointAround(const Vector&) const;
     Point center() const;

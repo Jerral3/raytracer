@@ -4,6 +4,7 @@
 #include "Vector.h"
 #include "Ray.h"
 #include "Object.h"
+#include "Intersection.h"
 
 #include <iostream>
 #include <cmath>
@@ -64,49 +65,46 @@ Color Tracer::getPixelColor(int i, int j, int t)
 Color Tracer::getColor(const Ray& ray, const Light* light,  int r)
 {
 	Color color  = Color::black();
-	Color cInter = Color::black();
 
 #if ROULETTE != 1
 	if (!r)
 		return color;
 #endif
+	
+	Intersection intersection;
 
-	Object* intersected = nullptr;
-	Point intersection = Point();
-	Vector normal = Vector();
-
-	if (!m_scene.intersect(ray, &intersected, &normal, &intersection, &cInter))
+	if (!m_scene.intersect(ray, intersection))
 		return color;
 
-	if (intersected->isMirror()) {
+	if (intersection.intersected->isMirror()) {
 #if ROULETTE == 1
 		if (distrib(engine) < ROULETTE_THRESHOLD)
-			return (1./ROULETTE_THRESHOLD) * getColor(rebound(ray, normal, intersection), light, --r).specular(cInter);
+			return (1./ROULETTE_THRESHOLD) * getColor(rebound(ray, intersection.normale, intersection.intersection), light, --r).specular(cInter);
 		else
 			return color;
 #else
-		return getColor(rebound(ray, normal, intersection), light, --r) * cInter;
+		return getColor(rebound(ray, intersection.normale, intersection.intersection), light, --r) * intersection.color;
 #endif
 	}
 
-	if (intersected->isTransparent()) {
+	if (intersection.intersected->isTransparent()) {
 #if ROULETTE == 1
 		if (distrib(engine) < ROULETTE_THRESHOLD)
-			return (1./ROULETTE_THRESHOLD) * getColor(refract(ray, normal,  intersection, intersected), light, --r);
+			return (1./ROULETTE_THRESHOLD) * getColor(refract(ray, intersection.normale,  intersection.intersection, intersection.intersected), light, --r);
 		else
 			return color;
 #else
-		return getColor(refract(ray, normal,  intersection, intersected), light, --r);
+		return getColor(refract(ray, intersection.normale, intersection.intersection, intersection.intersected), light, --r);
 #endif
 	}
 
 	if (light != nullptr)
-		color += directLighting(normal, intersection, light) * cInter;
+		color += directLighting(intersection.normale, intersection.intersection, light) * intersection.color;
 	else
-		color += directLighting(ray, normal, intersection, intersected) * cInter;
+		color += directLighting(ray, intersection.normale, intersection.intersection, intersection.intersected) * intersection.color;
 
-	if (intersected->isDiffuse()) {
-		Vector l = intersected->monteCarloVector(normal);
+	if (intersection.intersected->isDiffuse()) {
+		Vector l = intersection.intersected->monteCarloVector(intersection.normale);
 
 #if PHONG == 1
 		double exp   = 10.;
@@ -114,12 +112,12 @@ Color Tracer::getColor(const Ray& ray, const Light* light,  int r)
 		double p     = 1. - ks;
 		double enter = distrib(engine); 
 
-		Vector reflect = rebound(ray, normal, intersection).getDirection().normalize();
+		Vector reflect = rebound(ray, intersection.normale, intersection.intersection).getDirection().normalize();
 
 		if (enter > p) {
-			l = intersected->phongVector(reflect, exp);
+			l = intersection.intersected->phongVector(reflect, exp);
 
-			if (dotProduct(l, normal) < 0)
+			if (dotProduct(l, intersection.normale) < 0)
 				return Color::black();
 
 			if (dotProduct(l, reflect) < 0)
@@ -127,30 +125,30 @@ Color Tracer::getColor(const Ray& ray, const Light* light,  int r)
 		}
 
 		double proba_phong = (exp + 1) * std::pow(dotProduct(reflect, l), exp) / (2*M_PI);
-		double proba       = p * dotProduct(normal, l) / (M_PI) + (1 - p)*proba_phong;
+		double proba       = p * dotProduct(intersection.normale, l) / (M_PI) + (1 - p)*proba_phong;
 
-		cInter = (dotProduct(normal, l) / (M_PI * proba)) * cInter;
+		cInter = (dotProduct(intersection.normale, l) / (M_PI * proba)) * intersection.color;
 
 		if (enter > p)
-			cInter = M_PI * ks * phong(l, ray, normal, intersection, exp) * cInter;
+			cInter = M_PI * ks * phong(l, ray, intersection.normale, Intersection.intersection, exp) * intersection.color;
 #endif
 
-		Ray monteCarlo = Ray(intersection + EPSILON*normal, l);
+		Ray monteCarlo = Ray(intersection.intersection + EPSILON*intersection.normale, l);
 
 #if ROULETTE == 1
-		double thres = cInter.max();
+		double thres = intersection.color.max();
 		if (distrib(engine) < thres)
-			color += (1./thres) * getColor(monteCarlo, light, r - 1).specular(cInter);
+			color += (1./thres) * getColor(monteCarlo, light, r - 1).specular(intersection.color);
 #else
-		color += getColor(monteCarlo, light, r - 1) * cInter;
+		color += getColor(monteCarlo, light, r - 1) * intersection.color;
 #endif
 	}
 
 #if ATMOSPHERE == 1
-	color *= extinction(ray.getDirection(), intersection);
+	color *= extinction(ray.getDirection(), intersection.intersection);
 	
 	Ray contrib = ray;
-	double facteur = contribution(ray.getOrigine(), intersection, &contrib);
+	double facteur = contribution(ray.getOrigine(), intersection.intersection, &contrib);
 
 	color += facteur *  getColor(contrib, light, r - 1);
 #endif
@@ -162,16 +160,13 @@ double Tracer::directLighting(const Vector& normal, const Point& intersection, c
 {
 	double intensity = m_scene.intensity(normal, intersection, light);
 
-	Vector nextNormal = Vector();
-	Point nextIntersection = Point();
-	Object* nextIntersected = nullptr;
-	Color color = Color::black();
+	Intersection nextIntersection;
 	Point origine = intersection + EPSILON*normal;
 	Ray    nextRay = Ray(origine, light->origine() - origine);
 
-	if (!m_scene.intersect(nextRay, &nextIntersected, &nextNormal, &nextIntersection, &color))
+	if (!m_scene.intersect(nextRay, nextIntersection))
 		;
-	else if (squaredNorm(nextIntersection - light->origine()) > squaredNorm(nextIntersection - intersection))
+	else if (squaredNorm(nextIntersection.intersection - light->origine()) > squaredNorm(nextIntersection.intersection - intersection))
 		intensity = 0;
 
 	return intensity;
@@ -192,14 +187,11 @@ double Tracer::directLighting(const Ray& ray, const Vector& normal, const Point&
 		double d = squaredNorm(xprime - x);
 
 		Ray rayon = Ray(x + EPSILON*normal, w);
-		Object* nextIntersected = nullptr;
-		Vector nextNormal = Vector();
-		Point nextIntersection = Point();
-		Color color = Color::black();
+		Intersection nextIntersection;
 
-		if (!m_scene.intersect(rayon, &nextIntersected, &nextNormal, &nextIntersection, &color))
+		if (!m_scene.intersect(rayon, nextIntersection))
 			;
-		else if (squaredNorm(nextIntersection - x) < d*0.98) {
+		else if (squaredNorm(nextIntersection.intersection - x) < d*0.98) {
 			continue;
 		}
 
@@ -228,7 +220,7 @@ Ray Tracer::rebound(const Ray& ray, const Vector& n, const Point& point) const
 	return Ray(point + EPSILON*n, ray.direction() - 2*dotProduct(ray.direction(), n)*n);
 }
 
-Ray Tracer::refract(const Ray& ray, const Vector& normal, const Point& point,  Object* intersected) const
+Ray Tracer::refract(const Ray& ray, const Vector& normal, const Point& point, const Object* intersected) const
 {
 	Vector n = normal;
 	double n1 = N_AIR;

@@ -4,6 +4,7 @@
 #include "Vector.h"
 #include "Object.h"
 #include "Color.h"
+#include "Intersection.h"
 
 class Sphere : public Object {
 	Point m_center;
@@ -23,7 +24,7 @@ public:
 	double area() const;
 
 	Vector normal(const Point&) const;
-	double intersect(const Point&, const Vector&, Vector*, Point*, Color*) const;
+	double intersect(const Point&, const Vector&, Intersection&) const;
     Point randomPointAround(const Vector&) const;
 };
 

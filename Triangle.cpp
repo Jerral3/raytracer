@@ -1,10 +1,11 @@
 #include "Triangle.h"
 
 #include "Vector.h"
+#include "Intersection.h"
 
 #include <cmath>
 
-double Triangle::intersect(const Point& origine, const Vector& direction, Vector* n, Point* point, Vector* texture) const
+double Triangle::intersect(const Point& origine, const Vector& direction, Intersection& intersection, Vector* texture) const
 {
 	double dot = dotProduct(direction, m_normal);
 
@@ -39,8 +40,8 @@ double Triangle::intersect(const Point& origine, const Vector& direction, Vector
 	if (alpha < 0. || alpha > 1. || beta < 0. || beta > 1. || gamma < 0. || gamma > 1.)
 		return -1.;
 
-	*point   = origine + t*direction;
-	*n       = alpha*m_nA + beta*m_nB + gamma*m_nC;
+	intersection.intersection = origine + t*direction;
+	intersection.normale      = alpha*m_nA + beta*m_nB + gamma*m_nC;
 	*texture = alpha*m_tA + beta*m_tB + gamma*m_tC;
 
 	return t;

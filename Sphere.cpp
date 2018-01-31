@@ -55,7 +55,7 @@ double Sphere::area() const
 	//return (M_PI*m_radius*m_radius);
 }
 
-double Sphere::intersect(const Point& origine, const Vector& direction, Vector* n, Point* point, Color* color) const
+double Sphere::intersect(const Point& origine, const Vector& direction, Intersection& intersection) const
 {
 	Vector lightDir = origine - m_center;
 
@@ -80,9 +80,12 @@ double Sphere::intersect(const Point& origine, const Vector& direction, Vector* 
 	else
 		t = (-b - root)/2.;
 
-	*point = origine + t*direction;
-	*n     = normal(*point);
-	*color = m_color;
+	Point point = origine + t*direction;
+
+	intersection.intersection = point;
+	intersection.normale      = normal(point);
+	intersection.color        = m_color;
+	intersection.intersected  = this;
 
 	return t;
 }

@@ -3,6 +3,7 @@
 #include "Object.h"
 #include "Ray.h"
 #include "Vector.h"
+#include "Intersection.h"
 
 #include <cmath>
 #include <random>
@@ -10,23 +11,21 @@
 static std::default_random_engine engine;
 static std::uniform_real_distribution<double> distrib(0,1);
 
-bool Scene::intersect(const Ray& ray, Object** intersected, Vector* nInter, Point* intersection, Color* color) const
+bool Scene::intersect(const Ray& ray, Intersection& intersection) const
 {
 	double t = -1., s;
-	Vector n = Vector();
-	Point point = Point();
-	Color c = Color::black();
+	Intersection localIntersection;
 
 	for (Object* object : m_objects) {
 		Point origine   = object->invrot(ray.origine(), m_time) + (-1) * object->translation(m_time);
 		Vector direction = object->invrot(m_time) * ray.direction(); 
 
-		if ((s = object->intersect(origine, direction, &n, &point, &c)) != -1) {
+		if ((s = object->intersect(origine, direction, localIntersection)) != -1) {
 			if (t == -1. || s < t) {
-				*intersected  = object;
-				*intersection = object->rotation(point, m_time) + object->translation(m_time);
-				*nInter       = object->rotation(m_time) * n;
-				*color        = c;
+				intersection.intersected  = localIntersection.intersected;
+				intersection.intersection = object->rotation(localIntersection.intersection, m_time) + object->translation(m_time);
+				intersection.normale      = object->rotation(m_time) * localIntersection.normale;
+				intersection.color        = localIntersection.color;
 				t = s;
 			}
 		}

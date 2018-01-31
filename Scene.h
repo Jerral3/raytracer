@@ -8,6 +8,7 @@
 #include "Ray.h"
 #include "Vector.h"
 #include "Atmosphere.h"
+#include "Intersection.h"
 
 class Scene {
 	std::vector<Light*> m_lights;
@@ -26,7 +27,7 @@ public:
 	void setTime(double t) { m_time = t; }
 	double time() const { return m_time; }
 
-	bool intersect(const Ray&, Object**, Vector*, Point*, Color*) const;
+	bool intersect(const Ray&, Intersection&) const;
 	double intensity(const Vector&, const Point&, const Light*) const;
 
 	void addAtmosphere(Atmosphere a) { m_atmosphere = a; }

@@ -2,6 +2,7 @@
 #define TRIANGLE_HEADER
 
 #include "Vector.h"
+#include "Intersection.h"
 
 class Triangle {
 	Point m_A;
@@ -25,7 +26,7 @@ public:
 	Point b() const { return m_B;}
 	Point c() const { return m_C;}
 
-	double intersect(const Point&, const Vector&, Vector*, Point*, Vector*) const;
+	double intersect(const Point&, const Vector&, Intersection&, Vector*) const;
 };
 
 #endif

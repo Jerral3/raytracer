@@ -30,22 +30,22 @@ int main(void)
 	Sphere mur3 = Sphere::Diffuse(Point(0, -1000, 0), 990, Color::red());
 	Sphere mur4 = Sphere::Diffuse(Point(0, 0, 1000), 940, Color(0.3, 0.3, 0.3));
 
-	//Mesh mesh = Mesh("rex.obj", "Texture.bmp", Vector(0., -15.5, 0.), 0.07, Color::white());
+	Mesh mesh = Mesh("rex.obj", "Texture.bmp", Point(0., -15.5, 0.), 0.07, Color::white());
 	//mesh.addAnimation(new Rotation(mesh.getCenter(), 0, -360, 0, 0, 1));
 
-	std::vector<Object*> spheres {&lum, &sphere, &mur1, &mur2, &mur3, &mur4};
-	//std::vector<Object*> spheres {&mesh, &mur1, &mur2, &mur3, &mur4};
-	//std::vector<Light*> lights { new Light(Point(-10, 20, 40), intensity) };
+	//std::vector<Object*> spheres {&lum, &sphere, &mur1, &mur2, &mur3, &mur4};
+	std::vector<Object*> spheres {&mesh, &mur1, &mur2, &mur3, &mur4};
+	std::vector<Light*> lights { new Light(Point(-10, 20, 40), intensity) };
 
 	//std::vector<Light*> lights { new Light(Point(-10, 20, 40), intensity) , new Light(Point(10, 20, 40), intensity) };
 
 	//std::vector<Object*> spheres {&lum, &sphere, &mur1, &mur2, &mur3, &mur4};
-	std::vector<Light*> lights {};
+	//std::vector<Light*> lights {};
 
 	double density = 0.04;
 
 	Scene scene = Scene(lights, spheres);
-	scene.addAtmosphere(Atmosphere(density));
+	//scene.addAtmosphere(Atmosphere(density));
 
 	double fov = 60.*M_PI/180.;
 	Camera camera = Camera(Point(0, 0, 55), Vector(0., 0., -1.), Vector(0., 1., 0.), fov, 40);
