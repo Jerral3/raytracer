@@ -23,7 +23,7 @@ int getToken(std::istringstream& iss)
 	return std::stoi(token) - 1;
 }
 
-Mesh::Mesh(std::string filename, std::string texture, Vector origine, double scale, Color color) : Object(color), m_origine{origine}, m_scale{scale}, m_box{}, m_texture{}, m_width{0}, m_height{0}
+Mesh::Mesh(std::string filename, std::string texture, Point origine, double scale, Color color) : Object(color), m_origine{origine}, m_scale{scale}, m_box{}, m_texture{}, m_width{0}, m_height{0}
 {
 	makeDiffuse();
 
@@ -32,7 +32,7 @@ Mesh::Mesh(std::string filename, std::string texture, Vector origine, double sca
 	std::ifstream file(filename);
 	std::string line;
 
-	std::vector<Vector> points   {};
+	std::vector<Point>  points   {};
 	std::vector<Vector> normals  {};
 	std::vector<Vector> textures {};
 
@@ -48,23 +48,17 @@ Mesh::Mesh(std::string filename, std::string texture, Vector origine, double sca
 				double x, y, z;
 				iss >> x >> y >> z;
 
-				//std::cout << x << "," << y << " " << std::flush;
-
 				points.push_back(m_origine + m_scale*Vector(x, y, z));
 			} else if (character == 'n') {
 				iss >> useless;
 				double x, y, z;
 				iss >> x >> y >> z;
 
-				//std::cout << x << "," << y << " " << std::flush;
-
 				normals.push_back(Vector(x, y, z));
 			} else if (character == 't') {
 				iss >> useless;
 				double x, y, z;
 				iss >> x >> y >> z;
-
-				//std::cout << x << "," << y << " " << std::flush;
 
 				textures.push_back(Vector(x*m_width, y*m_height, 0.));
 			}
@@ -75,9 +69,9 @@ Mesh::Mesh(std::string filename, std::string texture, Vector origine, double sca
 			iss >> t1 >> t2 >> t3;
 			std::istringstream s1{t1}, s2{t2}, s3{t3};
 
-			Vector A = points[getToken(s1)];
-			Vector B = points[getToken(s2)];
-			Vector C = points[getToken(s3)];
+			Point A = points[getToken(s1)];
+			Point B = points[getToken(s2)];
+			Point C = points[getToken(s3)];
 
 			Vector tA = textures[getToken(s1)];
 			Vector tB = textures[getToken(s2)];
@@ -91,8 +85,8 @@ Mesh::Mesh(std::string filename, std::string texture, Vector origine, double sca
 		}
 	}
 
-	Vector pointMin = points[0];
-	Vector pointMax = points[0];
+	Point pointMin = points[0];
+	Point pointMax = points[0];
 
 	for (auto point: points) {
 		pointMin = min(pointMin, point);
@@ -105,14 +99,14 @@ Mesh::Mesh(std::string filename, std::string texture, Vector origine, double sca
 	m_box.constructBoxes();
 }
 
-Vector Mesh::normal(const Vector& point) const
+Vector Mesh::normal(const Point& point) const
 {
-	return point;
+	return point - m_origine;
 }
 
-double Mesh::intersect(const Vector& origine, const Vector& direction, Vector* normal, Vector* inter, Color* color) const
+double Mesh::intersect(const Point& origine, const Vector& direction, Vector* normal, Point* inter, Color* color) const
 {
-	Vector texture = Vector(0., 0., 0.);
+	Vector texture = Vector();
 	double t = m_box.intersect(origine, direction, normal, inter, &texture);
 	
 	*color = getColorTexture(texture);
@@ -124,9 +118,6 @@ Color Mesh::getColorTexture(Vector& texture) const
 {
 	int x = (int)texture.x();
 	int y = (int)texture.y();
-
-	//texture.print(); std::cout << std::endl << std::flush;
-	//std::cout << (x*m_width + y)*3 << std::endl << std::flush;
 
 	double red   = m_texture[(y*m_width + x)*3 + 0] / 255.;
 	double green = m_texture[(y*m_width + x)*3 + 1] / 255.;
@@ -140,16 +131,16 @@ double Mesh::area() const
 	return 0.;
 }
 
-Vector Mesh::getCenter() const
+Point Mesh::center() const
 {
-	return Vector(0., 0., 0.);
+	return m_box.m_min + 0.5 * (m_box.m_max - m_box.m_min);
 }
 
-Vector Mesh::randomPointAround(const Vector& direction) const
+Point Mesh::randomPointAround(const Vector& direction) const
 {
 	Vector wi = monteCarloVector(direction).normalize();
 
-	return wi;
+	return m_origine + wi;
 //	return getCenter() + m_radius * wi;
 }
 
@@ -158,16 +149,16 @@ void Box::constructBoxes()
 	if (m_faces.size() < RECURSION_BOXES)
 		return;
 
-	Vector limit = m_min + 0.5 * (m_max - m_min);
+	Point limit = m_min + 0.5 * (m_max - m_min);
 
 	m_boxes[0] = new Box(m_min, limit);
-	m_boxes[1] = new Box(Vector(m_min.x(), m_min.y(), limit.z()), Vector(limit.x(), limit.y(), m_max.z()));
-	m_boxes[2] = new Box(Vector(m_min.x(), limit.y(), m_min.z()), Vector(limit.x(), m_max.y(), limit.z()));
-	m_boxes[3] = new Box(Vector(m_min.x(), limit.y(), limit.z()), Vector(limit.x(), m_max.y(), m_max.z()));
-	m_boxes[4] = new Box(Vector(limit.x(), m_min.y(), m_min.z()), Vector(m_max.x(), limit.y(), limit.z()));
-	m_boxes[5] = new Box(Vector(limit.x(), m_min.y(), limit.z()), Vector(m_max.x(), limit.y(), m_max.z()));
-	m_boxes[6] = new Box(Vector(limit.x(), limit.y(), m_min.z()), Vector(m_max.x(), m_max.y(), limit.z()));
-	m_boxes[7] = new Box(Vector(limit.x(), limit.y(), limit.z()), Vector(m_max.x(), m_max.y(), m_max.z()));
+	m_boxes[1] = new Box(Point(m_min.x(), m_min.y(), limit.z()), Point(limit.x(), limit.y(), m_max.z()));
+	m_boxes[2] = new Box(Point(m_min.x(), limit.y(), m_min.z()), Point(limit.x(), m_max.y(), limit.z()));
+	m_boxes[3] = new Box(Point(m_min.x(), limit.y(), limit.z()), Point(limit.x(), m_max.y(), m_max.z()));
+	m_boxes[4] = new Box(Point(limit.x(), m_min.y(), m_min.z()), Point(m_max.x(), limit.y(), limit.z()));
+	m_boxes[5] = new Box(Point(limit.x(), m_min.y(), limit.z()), Point(m_max.x(), limit.y(), m_max.z()));
+	m_boxes[6] = new Box(Point(limit.x(), limit.y(), m_min.z()), Point(m_max.x(), m_max.y(), limit.z()));
+	m_boxes[7] = new Box(Point(limit.x(), limit.y(), limit.z()), Point(m_max.x(), m_max.y(), m_max.z()));
 
 	for (auto box: m_boxes)
 		for (auto face: m_faces) 
@@ -184,7 +175,7 @@ bool Box::contain(Triangle& face) const
 	double boxhalfsize[3];
 	double triverts[3][3];
 
-	Vector center = 0.5 * (m_min + m_max) ;
+	Point  center = m_min + 0.5 * (m_max - m_min) ;
     Vector halfsize = 0.5 * (m_max - m_min);
 
     boxcenter[0] = center.x();
@@ -206,15 +197,9 @@ bool Box::contain(Triangle& face) const
     triverts[2][2] = face.c().z();
 
 	return triBoxOverlap(boxcenter, boxhalfsize, triverts);
-	//return contain(face.a()) || contain(face.b()) || contain(face.c());
 }
 
-bool Box::contain(Vector point) const
-{
-	return (m_min < point) && (point < m_max);
-}
-
-bool Box::intersect(const Vector& origine, const Vector& direction) const
+bool Box::intersect(const Point& origine, const Vector& direction) const
 {
 	Vector vMin = m_min - origine;
 	Vector vMax = m_max - origine;
@@ -234,7 +219,7 @@ bool Box::intersect(const Vector& origine, const Vector& direction) const
 	return false;
 }
 
-double Box::intersect(const Vector& origine, const Vector& direction, Vector* normal, Vector* inter, Vector* texture) const
+double Box::intersect(const Point& origine, const Vector& direction, Vector* normal, Point* inter, Vector* texture) const
 {
 	if (!intersect(origine, direction))
 		return -1.;
@@ -243,7 +228,8 @@ double Box::intersect(const Vector& origine, const Vector& direction, Vector* no
 
 	if (m_boxes[0] == nullptr) {
 		double s;
-		Vector n = Vector(0., 0., 0.), point = Vector(0., 0., 0.), text = Vector(0., 0., 0.);
+		Vector n = Vector(), text = Vector();
+		Point point = Point();
 
 		for (Triangle face : m_faces) {
 			if ((s = face.intersect(origine, direction, &n, &point, &text)) != -1) {
@@ -260,7 +246,8 @@ double Box::intersect(const Vector& origine, const Vector& direction, Vector* no
 	}
 
 	double s;
-	Vector n = Vector(0., 0., 0.), point = Vector(0., 0., 0.), text = Vector(0., 0., 0.);
+	Vector n = Vector(), text = Vector();
+	Point point = Point();
 
 	for (auto box : m_boxes) {
 		if ((s = box->intersect(origine, direction, &n, &point, &text)) != -1.) {

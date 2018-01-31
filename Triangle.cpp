@@ -4,7 +4,7 @@
 
 #include <cmath>
 
-double Triangle::intersect(const Vector& origine, const Vector& direction, Vector* n, Vector* point, Vector* texture) const
+double Triangle::intersect(const Point& origine, const Vector& direction, Vector* n, Point* point, Vector* texture) const
 {
 	double dot = dotProduct(direction, m_normal);
 
@@ -16,7 +16,7 @@ double Triangle::intersect(const Vector& origine, const Vector& direction, Vecto
 	if (t < 0)
 		return -1.;
 
-	Vector P = origine + t*direction;
+	Point  P = origine + t*direction;
 	Vector u = m_B - m_A;
 	Vector v = m_C - m_A;
 	Vector w = P - m_A;
@@ -39,12 +39,9 @@ double Triangle::intersect(const Vector& origine, const Vector& direction, Vecto
 	if (alpha < 0. || alpha > 1. || beta < 0. || beta > 1. || gamma < 0. || gamma > 1.)
 		return -1.;
 
-
 	*point   = origine + t*direction;
 	*n       = alpha*m_nA + beta*m_nB + gamma*m_nC;
 	*texture = alpha*m_tA + beta*m_tB + gamma*m_tC;
-
-	//texture->print(); std::cout << std::endl << std::flush;
 
 	return t;
 }

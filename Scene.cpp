@@ -5,20 +5,27 @@
 #include "Vector.h"
 
 #include <cmath>
-#include <iostream>
+#include <random>
 
-bool Scene::intersect(const Ray& ray, Object** intersected, Vector* nInter, Vector* intersection, Color* color) const
+static std::default_random_engine engine;
+static std::uniform_real_distribution<double> distrib(0,1);
+
+bool Scene::intersect(const Ray& ray, Object** intersected, Vector* nInter, Point* intersection, Color* color) const
 {
 	double t = -1., s;
-	Vector n = Vector(0., 0., 0.), point = Vector(0., 0., 0.);
+	Vector n = Vector();
+	Point point = Point();
 	Color c = Color::black();
 
 	for (Object* object : m_objects) {
-		if ((s = object->intersect(ray.getOrigine(), ray.getDirection(), &n, &point, &c)) != -1) {
+		Point origine   = object->invrot(ray.origine(), m_time) + (-1) * object->translation(m_time);
+		Vector direction = object->invrot(m_time) * ray.direction(); 
+
+		if ((s = object->intersect(origine, direction, &n, &point, &c)) != -1) {
 			if (t == -1. || s < t) {
 				*intersected  = object;
-				*intersection = point;
-				*nInter       = n;
+				*intersection = object->rotation(point, m_time) + object->translation(m_time);
+				*nInter       = object->rotation(m_time) * n;
 				*color        = c;
 				t = s;
 			}
@@ -31,13 +38,30 @@ bool Scene::intersect(const Ray& ray, Object** intersected, Vector* nInter, Vect
 	return true;
 }
 
-double Scene::intensity(const Vector& normal, const Vector& intersection, const Light* light) const
+double Scene::intensity(const Vector& normal, const Point& intersection, const Light* light) const
 {
-	Vector lightDirection = light->getOrigine() - intersection;
+	Vector lightDirection = light->origine() - intersection;
 
 	double distance = sqrt(squaredNorm(lightDirection));
 
 	Vector l = (1./distance) * lightDirection;
 
-	return std::fmax(0, dotProduct(l, normal))*light->getIntensity()/(distance*distance);
+	return std::fmax(0, dotProduct(l, normal))*light->intensity()/(4*M_PI*distance*distance);
 }
+
+bool Scene::containEmissive() const
+{
+	for (Object* object: m_objects)
+		if (object->isEmissive())
+			return true;
+
+	return false;
+}
+
+double Scene::extinction(const Point& origine, const Point& intersection) const
+{
+	double integrale = m_atmosphere.density() * std::sqrt(squaredNorm(intersection - origine));
+
+	return std::exp(-integrale);
+}
+

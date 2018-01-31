@@ -2,13 +2,11 @@
 #define TRIANGLE_HEADER
 
 #include "Vector.h"
-#include "Object.h"
-#include "Color.h"
 
 class Triangle {
-	Vector m_A;
-	Vector m_B;
-	Vector m_C;
+	Point m_A;
+	Point m_B;
+	Point m_C;
 
 	Vector m_tA;
 	Vector m_tB;
@@ -21,13 +19,13 @@ class Triangle {
 	Vector m_normal;
 
 public:
-	Triangle(Vector A, Vector B, Vector C, Vector tA = Vector(0, 0, 0), Vector tB = Vector(0, 0, 0), Vector tC = Vector(0, 0, 0), Vector nA = Vector(0, 0, 0), Vector nB = Vector(0, 0, 0), Vector nC = Vector(0, 0, 0)): m_A{A}, m_B{B}, m_C{C}, m_tA{tA}, m_tB{tB}, m_tC{tC}, m_nA{nA}, m_nB{nB}, m_nC{nC}, m_normal{((C-A)^(B-A)).normalize()} {}
+	Triangle(Point A, Point B, Point C, Vector tA = Vector(), Vector tB = Vector(), Vector tC = Vector(), Vector nA = Vector(), Vector nB = Vector(), Vector nC = Vector()): m_A{A}, m_B{B}, m_C{C}, m_tA{tA}, m_tB{tB}, m_tC{tC}, m_nA{nA}, m_nB{nB}, m_nC{nC}, m_normal{((C-A)^(B-A)).normalize()} {}
 
-	Vector a() const { return m_A;}
-	Vector b() const { return m_B;}
-	Vector c() const { return m_C;}
+	Point a() const { return m_A;}
+	Point b() const { return m_B;}
+	Point c() const { return m_C;}
 
-	double intersect(const Vector&, const Vector&, Vector*, Vector*, Vector*) const;
+	double intersect(const Point&, const Vector&, Vector*, Point*, Vector*) const;
 };
 
 #endif

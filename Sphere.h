@@ -6,25 +6,25 @@
 #include "Color.h"
 
 class Sphere : public Object {
-	Vector m_center;
+	Point m_center;
 	double m_radius;
 
 public:
-	Sphere(Vector center, double radius, Color color = Color::black()) : Object(color), m_center{center}, m_radius{radius} {}
+	Sphere(Point center, double radius, Color color = Color::black()) : Object(color), m_center{center}, m_radius{radius} {}
 
-	static Sphere Specular(Vector center, double radius, Color color = Color::black()) ;
-	static Sphere Mirror(Vector center, double radius, Color color = Color::black());
-	static Sphere Transparent(Vector center, double radius, Color color = Color::black(), double indice = 1.);
-	static Sphere Diffuse(Vector center, double radius, Color color = Color::black());
-	static Sphere Emissive(Vector center, double radius, Color color = Color::black(), double intensity = 1000.);
+	static Sphere Specular(Point center, double radius, Color color = Color::black()) ;
+	static Sphere Mirror(Point center, double radius, Color color = Color::black());
+	static Sphere Transparent(Point center, double radius, Color color = Color::black(), double indice = 1.5);
+	static Sphere Diffuse(Point center, double radius, Color color = Color::black());
+	static Sphere Emissive(Point center, double radius, Color color = Color::black(), double intensity = 1000.);
 
-	Vector getCenter() const { return m_center; }
-	double getRadius() const { return m_radius; }
-
-	Vector normal(const Vector&) const;
-	double intersect(const Vector&, const Vector&, Vector*, Vector*, Color*) const;
+	Point  center() const { return m_center; }
+	double radius() const { return m_radius; }
 	double area() const;
-    Vector randomPointAround(const Vector&) const;
+
+	Vector normal(const Point&) const;
+	double intersect(const Point&, const Vector&, Vector*, Point*, Color*) const;
+    Point randomPointAround(const Vector&) const;
 };
 
 #endif

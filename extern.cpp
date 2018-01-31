@@ -44,7 +44,7 @@ int planeBoxOverlap(double normal[3], double vert[3], double maxbox[3])	// -NJMP
   for(q=X;q<=Z;q++)
   {
     v=vert[q];					// -NJMP-
-    if(normal[q]>0.0f)
+    if(normal[q]>0.0)
     {
       vmin[q]=-maxbox[q] - v;	// -NJMP-
       vmax[q]= maxbox[q] - v;	// -NJMP-
@@ -55,8 +55,8 @@ int planeBoxOverlap(double normal[3], double vert[3], double maxbox[3])	// -NJMP
       vmax[q]=-maxbox[q] - v;	// -NJMP-
     }
   }
-  if(DOT(normal,vmin)>0.0f) return 0;	// -NJMP-
-  if(DOT(normal,vmax)>=0.0f) return 1;	// -NJMP-
+  if(DOT(normal,vmin)>0.0) return 0;	// -NJMP-
+  if(DOT(normal,vmax)>=0.0) return 1;	// -NJMP-
   
   return 0;
 }
@@ -136,23 +136,23 @@ int triBoxOverlap(double boxcenter[3],double boxhalfsize[3],double triverts[3][3
 
    /* Bullet 3:  */
    /*  test the 9 tests first (this was faster) */
-   fex = fabsf(e0[X]);
-   fey = fabsf(e0[Y]);
-   fez = fabsf(e0[Z]);
+   fex = abs(e0[X]);
+   fey = abs(e0[Y]);
+   fez = abs(e0[Z]);
    AXISTEST_X01(e0[Z], e0[Y], fez, fey);
    AXISTEST_Y02(e0[Z], e0[X], fez, fex);
    AXISTEST_Z12(e0[Y], e0[X], fey, fex);
 
-   fex = fabsf(e1[X]);
-   fey = fabsf(e1[Y]);
-   fez = fabsf(e1[Z]);
+   fex = abs(e1[X]);
+   fey = abs(e1[Y]);
+   fez = abs(e1[Z]);
    AXISTEST_X01(e1[Z], e1[Y], fez, fey);
    AXISTEST_Y02(e1[Z], e1[X], fez, fex);
    AXISTEST_Z0(e1[Y], e1[X], fey, fex);
 
-   fex = fabsf(e2[X]);
-   fey = fabsf(e2[Y]);
-   fez = fabsf(e2[Z]);
+   fex = abs(e2[X]);
+   fey = abs(e2[Y]);
+   fez = abs(e2[Z]);
    AXISTEST_X2(e2[Z], e2[Y], fez, fey);
    AXISTEST_Y1(e2[Z], e2[X], fez, fex);
    AXISTEST_Z12(e2[Y], e2[X], fey, fex);

@@ -1,6 +1,8 @@
 #ifndef COLOR_HEADER
 #define COLOR_HEADER
 
+#include <cmath>
+
 class Color {
 	double m_red;
 	double m_green;
@@ -17,16 +19,19 @@ public:
 
 	Color& operator+=(const Color&);
 	Color& operator*=(double l);
-	bool operator==(Color v) const { return m_blue == v.m_blue && m_red == v.m_red && m_green == v.m_green;  }
+	Color& operator*=(const Color&);
+	bool operator==(const Color& v) const;
+	double max() const {return std::fmax(m_red, std::fmax(m_green, m_blue)); };
 
-	Color& specular(const Color&);
 	Color& gamma();
 
-	double getIntensity(int) const;
+	double intensity(int) const;
 
 	void print();
 };
 
+Color operator+(Color, Color);
+Color operator*(Color, Color);
 Color operator*(double, Color);
 
 #endif

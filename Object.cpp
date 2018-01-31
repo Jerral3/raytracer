@@ -7,7 +7,7 @@ static std::default_random_engine engine;
 static std::uniform_real_distribution<double> distrib(0,1);
 
 /* assume x is normalized */
-Base Object::getBaseAt(Vector x) const
+Base Object::baseAt(Vector x) const
 {
 	Vector y = x.orthogonal().normalize();
 	Vector z = (x ^ y);
@@ -18,7 +18,7 @@ Base Object::getBaseAt(Vector x) const
 /* assumes direction is normalized */
 Vector Object::monteCarloVector(const Vector& direction) const
 {
-	Base base = getBaseAt(direction);
+	Base base = baseAt(direction);
 
 	double r1 = distrib(engine);
 	double r2 = distrib(engine);
@@ -28,6 +28,23 @@ Vector Object::monteCarloVector(const Vector& direction) const
 	double x = std::cos(2*M_PI*r1)*root;
 	double y = std::sin(2*M_PI*r1)*root;
 	double z = std::sqrt(r2);
+
+	return x*std::get<2>(base) + y*std::get<1>(base) + z*std::get<0>(base);
+}
+
+/* assumes direction is normalized */
+Vector Object::phongVector(const Vector& direction, double phong) const
+{
+	Base base = baseAt(direction);
+
+	double r1 = distrib(engine);
+	double r2 = distrib(engine);
+
+	double root = std::sqrt(1 -std::pow(r2, 2./(phong+1)));
+
+	double x = std::cos(2*M_PI*r1)*root;
+	double y = std::sin(2*M_PI*r1)*root;
+	double z = std::pow(r2, 1./(phong + 1));
 
 	return x*std::get<2>(base) + y*std::get<1>(base) + z*std::get<0>(base);
 }

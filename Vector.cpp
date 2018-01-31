@@ -1,22 +1,6 @@
 #include "Vector.h"
 
 #include <cmath>
-
-Vector operator+(Vector v, Vector w)
-{
-	return v += w;
-}
-
-Vector operator-(Vector v, Vector w)
-{
-	return v -= w;
-}
-
-Vector operator*(double const l, Vector v)
-{
-	return v *= l;
-}
-
 Vector& Vector::operator^=(const Vector& v)
 {
 	double x = m_y*v.m_z - m_z*v.m_y;
@@ -26,11 +10,6 @@ Vector& Vector::operator^=(const Vector& v)
 	m_x = x, m_y = y, m_z = z;
 
 	return *this;
-}
-
-Vector operator^(Vector v, Vector w)
-{
-	return v ^= w;
 }
 
 double squaredNorm(const Vector& v)
@@ -71,6 +50,35 @@ Vector Vector::orthogonal() const
 	return Vector(x, y, z);
 }
 
+Vector operator+(Vector v, Vector w)
+{
+	return v += w;
+}
+
+Vector operator-(Vector v, Vector w)
+{
+	return v -= w;
+}
+
+Vector operator*(double const l, Vector v)
+{
+	return v *= l;
+}
+
+Vector operator*(Matrix m, Vector v)
+{
+	double x = m.a().x() * v.x() + m.b().x() * v.y() + m.c().x() * v.z();
+	double y = m.a().y() * v.x() + m.b().y() * v.y() + m.c().y() * v.z();
+	double z = m.a().z() * v.x() + m.b().z() * v.y() + m.c().z() * v.z();
+
+	return Vector(x, y, z);
+}
+
+Vector operator^(Vector v, Vector w)
+{
+	return v ^= w;
+}
+
 Vector max(const Vector& a, const Vector& b)
 {
 	return Vector(std::max(a.x(), b.x()), std::max(a.y(), b.y()), std::max(a.z(), b.z()));
@@ -79,4 +87,44 @@ Vector max(const Vector& a, const Vector& b)
 Vector min(const Vector& a, const Vector& b)
 {
 	return Vector(std::min(a.x(), b.x()), std::min(a.y(), b.y()), std::min(a.z(), b.z()));
+}
+
+Vector operator-(Point m, Point n)
+{
+	return Vector(m.x() - n.x(), m.y() - n.y(), m.z() - n.z());
+}
+
+Point operator+(Point p, Vector v)
+{
+	return Point(p.x() + v.x(), p.y() + v.y(), p.z() + v.z());
+}
+
+Point max(const Point& a, const Point& b)
+{
+	return Point(std::max(a.x(), b.x()), std::max(a.y(), b.y()), std::max(a.z(), b.z()));
+}
+
+Point min(const Point& a, const Point& b)
+{
+	return Point(std::min(a.x(), b.x()), std::min(a.y(), b.y()), std::min(a.z(), b.z()));
+}
+
+Matrix operator+(Matrix m, Matrix n)
+{
+	return m += n;
+}
+
+Matrix operator-(Matrix m, Matrix n)
+{
+	return m -= n;
+}
+
+Matrix operator*(double const l, Matrix m)
+{
+	return Matrix(l*m.a(), l*m.b(), l*m.c());
+}
+
+Matrix operator*(Matrix m, Matrix n)
+{
+	return Matrix(m*n.a(), m*n.b(), m*n.c());
 }

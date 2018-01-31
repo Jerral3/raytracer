@@ -9,27 +9,33 @@
 #include "Ray.h"
 #include "Light.h"
 #include "Object.h"
+#include "Camera.h"
 
 class Tracer {
-	Vector& m_camera;
-	double m_fov;
+	Camera& m_camera;
 
 	Scene& m_scene;
 
 	unsigned char m_screen[SCREEN_HEIGHT][SCREEN_WIDTH][CHANNEL];
 
 public:
-	Tracer(Vector& camera, double fov, Scene& scene): m_camera{camera}, m_fov{fov}, m_scene{scene}, m_screen{} {}
+	Tracer(Camera& camera, Scene& scene): m_camera{camera}, m_scene{scene}, m_screen{} {}
 
-	void draw();
-	Color getPixelColor(int i, int j);
+	void draw(const char* filename);
+	Color getPixelColor(int i, int j, int t);
 	Color getColor(const Ray&, const Light*,  int);
-	double directLighting(const Vector&, const Vector&, const Object*) const;
-	double directLighting(const Vector&, const Vector&, const Light*) const;
+	double directLighting(const Ray&, const Vector&, const Point&, const Object*) const;
+	double directLighting(const Vector&, const Point&, const Light*) const;
 	
-	Ray rebound(const Ray&, const Vector&, const Vector&) const;
-	Ray refract(const Ray&, const Vector&, const Vector&,  Object*) const;
-	Ray antiAliasingRay(int i, int j) const;
+	Ray rebound(const Ray&, const Vector&, const Point&) const;
+	Ray refract(const Ray&, const Vector&, const Point&,  Object*) const;
+
+	double phong(const Vector&, const Ray&, const Vector&, const Point&, double) const; 
+
+	double extinction(const Point&, const Point&) const;
+	double contribution(const Point&, const Point&, Ray*) const;
+
+	Vector randomVector() const;
 
 	void save(const char* filename) const;
 };

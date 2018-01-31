@@ -12,25 +12,25 @@ class Box {
 	Box* m_boxes[8];
 
 public:
-	Vector m_min;
-	Vector m_max;
+	Point m_min;
+	Point m_max;
 
 	std::vector<Triangle> m_faces;
 
-	Box(Vector min = Vector(0., 0., 0.), Vector max = Vector(0., 0., 0.)): m_boxes{nullptr},  m_min{min}, m_max{max}, m_faces{} {}
+	Box(Point min = Point(), Point max = Point()): m_boxes{nullptr},  m_min{min}, m_max{max}, m_faces{} {}
+	Box(const Box&) = default;
+	Box& operator=(const Box&) = default;
 	~Box() { for (auto box : m_boxes) delete box; }
 
 	void constructBoxes();
-	inline bool contain(Vector) const;
 	inline bool contain(Triangle&) const;
-	void print() const { m_min.print(); std::cout << " "; m_max.print(); std::cout << std::endl; }
 
-	bool intersect(const Vector&, const Vector&) const;
-	double intersect(const Vector&, const Vector&, Vector*, Vector*, Vector*) const;
+	bool intersect(const Point&, const Vector&) const;
+	double intersect(const Point&, const Vector&, Vector*, Point*, Vector*) const;
 };
 
 class Mesh : public Object {
-	Vector m_origine;
+	Point m_origine;
 	double m_scale;
 
 	Box m_box;
@@ -39,17 +39,19 @@ class Mesh : public Object {
 	int m_height;
 
 public:
-	Mesh(std::string, std::string, Vector, double, Color = Color::black());
+	Mesh(std::string, std::string, Point, double, Color = Color::black());
+	Mesh(const Mesh& m) = default;
+	Mesh& operator=(const Mesh& m) = default;
 
-	Vector getOrigine() const { return m_origine; }
-	double getScale() const { return m_scale; }
+	Point origine() const { return m_origine; }
+	double scale() const { return m_scale; }
 	Color  getColorTexture(Vector&) const;
 
-	Vector normal(const Vector&) const;
-	double intersect(const Vector&, const Vector&, Vector*, Vector*, Color*) const;
+	Vector normal(const Point&) const;
+	double intersect(const Point&, const Vector&, Vector*, Point*, Color*) const;
 	double area() const;
-    Vector randomPointAround(const Vector&) const;
-    Vector getCenter() const;
+    Point randomPointAround(const Vector&) const;
+    Point center() const;
 };
 
 #endif

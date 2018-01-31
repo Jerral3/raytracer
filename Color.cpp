@@ -7,9 +7,9 @@
 
 Color& Color::operator+=(const Color& c)
 {
-	m_red   += c.getIntensity(RED);
-	m_green += c.getIntensity(GREEN);
-	m_blue  += c.getIntensity(BLUE);
+	m_red   += c.intensity(RED);
+	m_green += c.intensity(GREEN);
+	m_blue  += c.intensity(BLUE);
 
 	return *this;
 }
@@ -23,7 +23,21 @@ Color& Color::operator*=(double l)
 	return *this;
 }
 
-double Color::getIntensity(int k) const
+Color& Color::operator*=(const Color& color)
+{
+	m_red   *= color.intensity(RED);
+	m_green *= color.intensity(GREEN);
+	m_blue  *= color.intensity(BLUE);
+
+	return *this;
+}
+
+bool Color::operator==(const Color& c) const
+{
+	return intensity(RED) == c.intensity(RED) && intensity(GREEN) == c.intensity(GREEN) && intensity(BLUE) == c.intensity(BLUE);
+}
+
+double Color::intensity(int k) const
 {
 	double color = 0.;
 
@@ -42,29 +56,34 @@ double Color::getIntensity(int k) const
 	return color;
 }
 
-Color& Color::specular(const Color& color)
-{
-	m_red   *= color.m_red;
-	m_green *= color.m_green;
-	m_blue  *= color.m_blue;
-
-	return *this;
-}
-
 Color& Color::gamma()
 {
+#if CORRECTION_GAMMA == 1
 	double gamma = 1./GAMMA;
 
-	m_red   = std::pow(m_red,   gamma);
-	m_blue  = std::pow(m_blue,  gamma);
-	m_green = std::pow(m_green, gamma);
+	m_red   = std::pow(intensity(RED),   gamma);
+	m_green = std::pow(intensity(GREEN), gamma);
+	m_blue  = std::pow(intensity(BLUE),  gamma);
 
 	return *this;
+#else
+	return *this;
+#endif
 }
 
 void Color::print()
 {
-	std::cout << "(r,g,b) : (" << m_red << "," << m_green << "," << m_blue << ") "; 
+	std::cout << "(r,g,b) : (" << intensity(RED) << "," << intensity(GREEN) << "," << intensity(BLUE) << ") "; 
+}
+
+Color operator+(Color c, Color d)
+{
+	return c += d;
+}
+
+Color operator*(Color c, Color d)
+{
+	return c *= d;
 }
 
 Color operator*(double l, Color c)

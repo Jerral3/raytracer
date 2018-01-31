@@ -4,7 +4,7 @@
 
 #include <cmath>
 
-Sphere Sphere::Specular(Vector center, double radius, Color color)
+Sphere Sphere::Specular(Point center, double radius, Color color)
 {
 	Sphere sphere = Sphere(center, radius, color);
 	sphere.makeSpecular();
@@ -12,7 +12,7 @@ Sphere Sphere::Specular(Vector center, double radius, Color color)
 	return sphere;
 }
 
-Sphere Sphere::Mirror(Vector center, double radius, Color color)
+Sphere Sphere::Mirror(Point center, double radius, Color color)
 {
 	Sphere sphere = Sphere(center, radius, color);
 	sphere.makeMirror();
@@ -20,7 +20,7 @@ Sphere Sphere::Mirror(Vector center, double radius, Color color)
 	return sphere;
 }
 
-Sphere Sphere::Transparent(Vector center, double radius, Color color, double indice)
+Sphere Sphere::Transparent(Point center, double radius, Color color, double indice)
 {
 	Sphere sphere = Sphere(center, radius, color);
 	sphere.makeTransparent(indice);
@@ -28,7 +28,7 @@ Sphere Sphere::Transparent(Vector center, double radius, Color color, double ind
 	return sphere;
 }
 
-Sphere Sphere::Diffuse(Vector center, double radius, Color color)
+Sphere Sphere::Diffuse(Point center, double radius, Color color)
 {
 	Sphere sphere = Sphere(center, radius, color);
 	sphere.makeDiffuse();
@@ -36,7 +36,7 @@ Sphere Sphere::Diffuse(Vector center, double radius, Color color)
 	return sphere;
 }
 
-Sphere Sphere::Emissive(Vector center, double radius, Color color, double intensity)
+Sphere Sphere::Emissive(Point center, double radius, Color color, double intensity)
 {
 	Sphere sphere = Sphere(center, radius, color);
 	sphere.makeEmissive(intensity);
@@ -44,12 +44,18 @@ Sphere Sphere::Emissive(Vector center, double radius, Color color, double intens
 	return sphere;
 }
 
-Vector Sphere::normal(const Vector& point) const
+Vector Sphere::normal(const Point& point) const
 {
 	return (1./m_radius) * (point - m_center);
 }
 
-double Sphere::intersect(const Vector& origine, const Vector& direction, Vector* n, Vector* point, Color* color) const
+double Sphere::area() const 
+{
+	return 4*M_PI;
+	//return (M_PI*m_radius*m_radius);
+}
+
+double Sphere::intersect(const Point& origine, const Vector& direction, Vector* n, Point* point, Color* color) const
 {
 	Vector lightDir = origine - m_center;
 
@@ -81,15 +87,9 @@ double Sphere::intersect(const Vector& origine, const Vector& direction, Vector*
 	return t;
 }
 
-double Sphere::area() const 
-{
-	return (4*M_PI);
-	//return (4*M_PI*m_radius*m_radius);
-}
-
-Vector Sphere::randomPointAround(const Vector& direction) const
+Point Sphere::randomPointAround(const Vector& direction) const
 {
 	Vector wi = monteCarloVector(direction).normalize();
 
-	return getCenter() + m_radius * wi;
+	return center() + m_radius * wi;
 }

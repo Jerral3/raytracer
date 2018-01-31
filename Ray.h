@@ -4,14 +4,14 @@
 #include "Vector.h"
 
 class Ray {
-	Vector m_origine;
+	Point  m_origine;
 	Vector m_direction;
 
 public:
-	Ray(Vector origine, Vector direction): m_origine{origine}, m_direction{direction.normalize()} {}
+	Ray(Point origine, Vector direction): m_origine{origine}, m_direction{direction.normalize()} {}
 
-	Vector getOrigine() const { return m_origine; }
-	Vector getDirection() const { return m_direction; }
+	Point  origine() const { return m_origine; }
+	Vector direction() const { return m_direction; }
 };
 
 #endif

@@ -3,8 +3,9 @@
 
 #include "Vector.h"
 #include "Color.h"
+#include "Animatable.h"
 
-class Object {
+class Object: public Animatable {
 protected:
 	Color  m_color;
 	bool   m_mirror;
@@ -15,14 +16,13 @@ protected:
 	double m_intensity;
 
 public:
-	virtual Vector normal(const Vector&) const = 0;
-    virtual double intersect(const Vector&, const Vector&, Vector*, Vector*, Color*) const = 0;
+	virtual Vector normal(const Point&) const = 0;
+    virtual double intersect(const Point&, const Vector&, Vector*, Point*, Color*) const = 0;
     virtual double area() const = 0;
-    virtual Vector getCenter() const = 0;
-    virtual Vector randomPointAround(const Vector&) const = 0;
+    virtual Point center() const = 0;
+    virtual Point randomPointAround(const Vector&) const = 0;
 
-
-    Object(Color color = Color::black()): m_color{color}, m_mirror{false}, m_transparency{false}, m_indice{1.}, m_diffuse{false}, m_emissive{false}, m_intensity{0.} {}
+    Object(Color color = Color::black()): Animatable(), m_color{color}, m_mirror{false}, m_transparency{false}, m_indice{1.}, m_diffuse{false}, m_emissive{false}, m_intensity{0.} {}
     virtual ~Object() = default;
 
     void makeSpecular() { m_mirror = false, m_transparency = false, m_diffuse = false, m_emissive = false; }
@@ -31,16 +31,17 @@ public:
     void makeDiffuse() { m_mirror = false, m_transparency = false, m_diffuse = true, m_emissive = false; }
     void makeEmissive(double intensity) { m_mirror = false, m_transparency = false, m_diffuse = false, m_emissive = true, m_intensity = intensity; }
 
-    Color getColor() const { return m_color; }
+    Color color() const { return m_color; }
     bool isMirror() const { return m_mirror; }
     bool isTransparent() const { return m_transparency; }
-    double getIndice() const { return m_indice; }
+    double indice() const { return m_indice; }
     bool isDiffuse() const { return m_diffuse; }
     bool isEmissive() const { return m_emissive; }
-    double getIntensity() const { return m_intensity / area(); }
+    double intensity() const { return m_intensity / area(); }
 
-    Base getBaseAt(Vector) const;
+    Base baseAt(Vector) const;
     Vector monteCarloVector(const Vector&) const;
+    Vector phongVector(const Vector&, double) const;
 };
 
 #endif
