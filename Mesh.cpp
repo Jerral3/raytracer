@@ -226,11 +226,11 @@ double Box::intersect(const Point& origine, const Vector& direction, Intersectio
 		return -1.;
 
 	double t = -1.;
+	double s;
 	Intersection localIntersection;
+	Vector text = Vector();
 
 	if (m_boxes[0] == nullptr) {
-		double s;
-		Vector text = Vector();
 
 		for (Triangle face : m_faces) {
 			if ((s = face.intersect(origine, direction, localIntersection, &text)) != -1) {
@@ -244,9 +244,6 @@ double Box::intersect(const Point& origine, const Vector& direction, Intersectio
 
 		return t;
 	}
-
-	double s;
-	Vector text = Vector();
 
 	for (auto box : m_boxes) {
 		if ((s = box->intersect(origine, direction, localIntersection, &text)) != -1.) {

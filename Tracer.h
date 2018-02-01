@@ -23,21 +23,20 @@ public:
 
 	void draw(const char* filename);
 	Color getPixelColor(int i, int j, int t);
-	Color getColor(const Ray&, const Light*,  int);
+	Color getColor(const Ray&, const Light*,  int) const;
 	double directLighting(const Ray&, const Vector&, const Point&, const Object*) const;
 	double directLighting(const Vector&, const Point&, const Light*) const;
 	
-	Ray rebound(const Ray&, const Vector&, const Point&) const;
-	Ray refract(const Ray&, const Vector&, const Point&, const Object*) const;
+	Vector rebound(const Vector&, const Vector&) const;
+	Ray refract(const Vector&, const Vector&, const Point&, const Object*) const;
 
-	double phong(const Vector&, const Ray&, const Vector&, const Point&, double) const; 
+	Color roulette(const Ray&, const Light*, int) const;
+	double phong(const Vector&, const Vector&, const Vector&, double) const; 
 
 	double extinction(const Point&, const Point&) const;
 	double contribution(const Point&, const Point&, Ray*) const;
 
-	Vector randomVector() const;
-
-	void save(const char* filename) const;
+	void save(const char* filename, int step) const;
 };
 
 #endif

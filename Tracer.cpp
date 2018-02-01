@@ -26,14 +26,9 @@ void Tracer::draw(const char* filename)
 				m_screen[i][j][1] = static_cast<unsigned char>(std::fmin(255., color.intensity(GREEN)));
 				m_screen[i][j][2] = static_cast<unsigned char>(std::fmin(255., color.intensity(BLUE)));
 			}
-			
-			//#pragma omp critical
-			//std::cout << "Approx. progress : " << (int)(i * 100 / SCREEN_HEIGHT) << " %\n";
 		}
 
-		std::ostringstream os;
-		os << filename << "_" << 10+t << ".bmp";
-		save(os.str().c_str());
+		save(filename, t);
 
 		std::cout << "Step " << t << std::endl << std::flush;
 	}
@@ -44,11 +39,8 @@ Color Tracer::getPixelColor(int i, int j, int t)
 	Color color = Color::black();
 
 	for (int l = 0; l < MONTE_CARLO_N; ++l) {
-#if MOTION_BLUR == 1
-		m_scene.setTime((t + distrib(engine))/TIME_STEPS);
-#else
-		m_scene.setTime((double)t/TIME_STEPS);
-#endif
+		m_scene.setTimeWithStep(t);
+
 		Ray ray = m_camera.ray(i, j, m_scene.time());
 
 		for (Light* light : m_scene.getLights()) {
@@ -62,41 +54,31 @@ Color Tracer::getPixelColor(int i, int j, int t)
 	return color;
 }
 
-Color Tracer::getColor(const Ray& ray, const Light* light,  int r)
+Color Tracer::getColor(const Ray& ray, const Light* light,  int r) const
 {
-	Color color  = Color::black();
-
 #if ROULETTE != 1
 	if (!r)
-		return color;
+		return Color::black();
 #endif
 	
 	Intersection intersection;
 
 	if (!m_scene.intersect(ray, intersection))
-		return color;
+		return Color::black();
 
 	if (intersection.intersected->isMirror()) {
-#if ROULETTE == 1
-		if (distrib(engine) < ROULETTE_THRESHOLD)
-			return (1./ROULETTE_THRESHOLD) * getColor(rebound(ray, intersection.normale, intersection.intersection), light, --r).specular(cInter);
-		else
-			return color;
-#else
-		return getColor(rebound(ray, intersection.normale, intersection.intersection), light, --r) * intersection.color;
-#endif
+		Ray reflect = Ray(intersection.intersection + EPSILON*intersection.normale, rebound(ray.direction(), intersection.normale));
+
+		return roulette(reflect, light, r) * intersection.color;
 	}
 
 	if (intersection.intersected->isTransparent()) {
-#if ROULETTE == 1
-		if (distrib(engine) < ROULETTE_THRESHOLD)
-			return (1./ROULETTE_THRESHOLD) * getColor(refract(ray, intersection.normale,  intersection.intersection, intersection.intersected), light, --r);
-		else
-			return color;
-#else
-		return getColor(refract(ray, intersection.normale, intersection.intersection, intersection.intersected), light, --r);
-#endif
+		Ray refracted = refract(ray.direction(), intersection.normale,  intersection.intersection, intersection.intersected);
+
+		return roulette(refracted, light, r);
 	}
+
+	Color color = Color::black();
 
 	if (light != nullptr)
 		color += directLighting(intersection.normale, intersection.intersection, light) * intersection.color;
@@ -107,12 +89,12 @@ Color Tracer::getColor(const Ray& ray, const Light* light,  int r)
 		Vector l = intersection.intersected->monteCarloVector(intersection.normale);
 
 #if PHONG == 1
-		double exp   = 10.;
-		double ks    = 0.3;
+		double exp   = intersection.intersected->phongExp();
+		double ks    = intersection.intersected->ks();
 		double p     = 1. - ks;
 		double enter = distrib(engine); 
 
-		Vector reflect = rebound(ray, intersection.normale, intersection.intersection).getDirection().normalize();
+		Vector reflect = rebound(ray.direction(), intersection.normale).normalize();
 
 		if (enter > p) {
 			l = intersection.intersected->phongVector(reflect, exp);
@@ -127,10 +109,10 @@ Color Tracer::getColor(const Ray& ray, const Light* light,  int r)
 		double proba_phong = (exp + 1) * std::pow(dotProduct(reflect, l), exp) / (2*M_PI);
 		double proba       = p * dotProduct(intersection.normale, l) / (M_PI) + (1 - p)*proba_phong;
 
-		cInter = (dotProduct(intersection.normale, l) / (M_PI * proba)) * intersection.color;
+		intersection.color *= (dotProduct(intersection.normale, l) / (M_PI * proba));
 
 		if (enter > p)
-			cInter = M_PI * ks * phong(l, ray, intersection.normale, Intersection.intersection, exp) * intersection.color;
+			intersection.color *= M_PI * ks * phong(l, ray.direction(), intersection.normale, exp);
 #endif
 
 		Ray monteCarlo = Ray(intersection.intersection + EPSILON*intersection.normale, l);
@@ -138,7 +120,7 @@ Color Tracer::getColor(const Ray& ray, const Light* light,  int r)
 #if ROULETTE == 1
 		double thres = intersection.color.max();
 		if (distrib(engine) < thres)
-			color += (1./thres) * getColor(monteCarlo, light, r - 1).specular(intersection.color);
+			color += (1./thres) * getColor(monteCarlo, light, r - 1) * intersection.color;
 #else
 		color += getColor(monteCarlo, light, r - 1) * intersection.color;
 #endif
@@ -197,16 +179,16 @@ double Tracer::directLighting(const Ray& ray, const Vector& normal, const Point&
 
 		Vector nprime   = light->normal(xprime);
 		double cosinus  = std::fmax(0., dotProduct(w, normal));
-		double cosprime = -dotProduct(w, nprime);
+		double cosprime = std::fmax(0., -dotProduct(w, nprime));
 
 		double denom = d * dotProduct(nprime, lightDir) * light->area();
 
 		double ajout = (light->intensity() * cosinus * cosprime / denom);
 
 #if PHONG == 1
-		double ks = 0.3;
-		double coef = 10.;
-		ajout *= (((1 - ks)/M_PI) + phong(w, ray, normal, x, coef) * ks)/M_PI;
+		double exp   = intersected->phongExp();
+		double ks    = intersected->ks();
+		ajout *= (((1 - ks)/M_PI) + phong(w, ray.direction(), normal, exp) * ks)/M_PI;
 #endif
 
 		intensity += ajout;
@@ -215,18 +197,18 @@ double Tracer::directLighting(const Ray& ray, const Vector& normal, const Point&
 	return intensity;
 }
 
-Ray Tracer::rebound(const Ray& ray, const Vector& n, const Point& point) const
+Vector Tracer::rebound(const Vector& in, const Vector& n) const
 {
-	return Ray(point + EPSILON*n, ray.direction() - 2*dotProduct(ray.direction(), n)*n);
+	return in - 2*dotProduct(in, n)*n;
 }
 
-Ray Tracer::refract(const Ray& ray, const Vector& normal, const Point& point, const Object* intersected) const
+Ray Tracer::refract(const Vector& in, const Vector& normal, const Point& point, const Object* intersected) const
 {
 	Vector n = normal;
 	double n1 = N_AIR;
 	double n2 = intersected->indice();
 
-	if (dotProduct(ray.direction(), n) > 0) {
+	if (dotProduct(in, n) > 0) {
 		n1 = n2;
 		n2 = N_AIR;
 		n  = (-1) * n;
@@ -234,18 +216,18 @@ Ray Tracer::refract(const Ray& ray, const Vector& normal, const Point& point, co
 
 	double nn = n1/n2;
 
-	double subSqrt = 1 - pow(nn, 2)*(1 - pow(dotProduct(ray.direction(), n), 2));
+	double subSqrt = 1 - pow(nn, 2)*(1 - pow(dotProduct(in, n), 2));
 
 	if (subSqrt < 0) {
 		std::cout << "Total reflex" << std::endl;
-		return rebound(ray, normal, point);
+		return Ray(point + EPSILON*normal, rebound(in, normal));
 	}
 
-	Vector tangent = + nn * ray.direction() - nn * dotProduct(ray.direction(), n) * n;
+	Vector tangent = + nn * in - nn * dotProduct(in, n) * n;
 	Vector normalR  = - sqrt(subSqrt) * n;
 
 #if FRESNEL == 1
-	Vector i = -1 * ray.direction();
+	Vector i = -1 * in;
 
 	if (n2 < n1)
 		i = tangent + normalR;
@@ -254,19 +236,32 @@ Ray Tracer::refract(const Ray& ray, const Vector& normal, const Point& point, co
 	double T = k + (1 - k) * std::pow(1 - dotProduct(normal, i), 5);
 
 	if (distrib(engine) < T)
-		return rebound(ray, normal, point);
+		return Ray(point + EPSILON*normal, rebound(in, normal));
 #endif
 
 	return Ray(point + (-1)*EPSILON*n, tangent + normalR);
 }
 
-double Tracer::phong(const Vector& in, const Ray& out, const Vector& n, const Point& point, double phong) const
+double Tracer::phong(const Vector& in, const Vector& out, const Vector& n, double phong) const
 {
-	Vector r = rebound(out, n, point).direction();
+	Vector r = rebound(out, n);
 
 	double test = std::pow(dotProduct(r, in), phong) * (phong + 2) / (2*M_PI);
 
 	return test;
+}
+
+Color Tracer::roulette(const Ray& ray, const Light* light, int r) const
+{
+	double facteur = 1.;
+#if ROULETTE == 1
+	if (distrib(engine) > ROULETTE_THRESHOLD)
+		return Color::black();
+
+	facteur = 1./ROULETTE_THRESHOLD;
+#endif
+
+	return facteur * getColor(ray, light, --r);
 }
 
 double Tracer::extinction(const Point& origine, const Point& intersection) const
@@ -285,26 +280,7 @@ double Tracer::contribution(const Point& origine, const Point& intersection, Ray
 	Vector direction = Vector();
 	Point point      = origine + distance*(intersection - origine);
 
-	//if (distrib(engine) < PROBABILITE_UNIFORME) {
-		direction = randomVector();
-	//} else {
-		//if (m_scene.containEmissive()) {
-			//for (Object* light : m_scene.getObjects()) {   // TODO: find way to handle multi light
-				//if (!light->isEmissive())
-					//continue;
-
-				//Vector lightDir = (point - light->getCenter()).normalize();
-				//Vector xprime = light->randomPointAround(lightDir);
-
-				//direction = (xprime - point).normalize();
-				//break; 
-			//}
-		//} else {   // TODO: handle point light
-			//direction = Vector(1, 1, 1);
-		//}
-	//}
-
-	//double proba = PROBABILITE_UNIFORME/distance + (1 - PROBABILITE_UNIFORME) * ;
+	direction = Vector::randomVector();
 	double proba = 1/distance;
 
 	*retRay = Ray(point, direction);
@@ -312,18 +288,7 @@ double Tracer::contribution(const Point& origine, const Point& intersection, Ray
 	return (phase * m_scene.atmosphere().density() * std::exp(-integrale) / (proba*4*M_PI));
 }
 
-Vector Tracer::randomVector() const
-{
-	double r1 = distrib(engine);
-	double r2 = distrib(engine);
-
-	double root = std::sqrt(r2*(1-r2));
-
-	return Vector(std::cos(2*M_PI)*2*r1*root, std::sin(2*M_PI)*2*r2*root, 1 - 2*r2);
-}
-
-
-void Tracer::save(const char* filename) const // (0,0) is top-left corner
+void Tracer::save(const char* filename, int step) const // (0,0) is top-left corner
 {
     FILE *f;
 
@@ -346,6 +311,16 @@ void Tracer::save(const char* filename) const // (0,0) is top-left corner
     bmpinfoheader[9]  = (unsigned char)(SCREEN_HEIGHT >> 8);
     bmpinfoheader[10] = (unsigned char)(SCREEN_HEIGHT >> 16);
     bmpinfoheader[11] = (unsigned char)(SCREEN_HEIGHT >> 24);
+
+	std::ostringstream os;
+
+#if TIME_STEPS > 1
+	os << filename << "_" << 10 + step << ".bmp";
+#else
+	os << filename << ".bmp";
+#endif
+
+	filename = os.str().c_str();
 
     f = fopen(filename, "wb");
 

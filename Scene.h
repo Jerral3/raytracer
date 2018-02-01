@@ -25,6 +25,7 @@ public:
 	bool containEmissive() const;
 
 	void setTime(double t) { m_time = t; }
+	void setTimeWithStep(int s);
 	double time() const { return m_time; }
 
 	bool intersect(const Ray&, Intersection&) const;

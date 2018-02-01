@@ -1,5 +1,7 @@
 #include "Scene.h"
 
+#include "config.h"
+
 #include "Object.h"
 #include "Ray.h"
 #include "Vector.h"
@@ -55,6 +57,15 @@ bool Scene::containEmissive() const
 			return true;
 
 	return false;
+}
+
+void Scene::setTimeWithStep(int step)
+{
+#if MOTION_BLUR == 1
+		setTime((step + distrib(engine))/TIME_STEPS);
+#else
+		setTime((double)step/TIME_STEPS);
+#endif
 }
 
 double Scene::extinction(const Point& origine, const Point& intersection) const

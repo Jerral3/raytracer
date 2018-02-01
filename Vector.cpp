@@ -1,6 +1,12 @@
 #include "Vector.h"
 
 #include <cmath>
+#include <random>
+
+static std::default_random_engine engine;
+static std::uniform_real_distribution<double> distrib(0,1);
+
+
 Vector& Vector::operator^=(const Vector& v)
 {
 	double x = m_y*v.m_z - m_z*v.m_y;
@@ -88,6 +94,17 @@ Vector min(const Vector& a, const Vector& b)
 {
 	return Vector(std::min(a.x(), b.x()), std::min(a.y(), b.y()), std::min(a.z(), b.z()));
 }
+
+Vector Vector::randomVector()
+{
+	double r1 = distrib(engine);
+	double r2 = distrib(engine);
+
+	double root = std::sqrt(r2*(1-r2));
+
+	return Vector(std::cos(2*M_PI)*2*r1*root, std::sin(2*M_PI)*2*r2*root, 1 - 2*r2);
+}
+
 
 Vector operator-(Point m, Point n)
 {

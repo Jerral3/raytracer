@@ -10,7 +10,7 @@ public:
 	Atmosphere(double density = 0.): m_density{density} {}
 
 	Color contribution() const { return Color::black(); }
-	double density() const { return m_density; }
+	double density()     const { return m_density; }
 };
 
 #endif

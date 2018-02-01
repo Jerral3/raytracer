@@ -6,7 +6,7 @@
 #include "Animatable.h"
 
 class Camera: public Animatable {
-	Point m_origine;
+	Point  m_origine;
 	Vector m_direction;
 	Vector m_up;
 
@@ -16,9 +16,9 @@ class Camera: public Animatable {
 public:
 	Camera(Point o, Vector d, Vector u, double fov, double focus): Animatable(), m_origine{o}, m_direction{d}, m_up{u}, m_fov{fov}, m_focus{focus} {}
 
-	Point origine() const { return m_origine; }
-	double fov() const { return m_fov; }
-	double focus() const { return m_focus; }
+	Point  origine() const { return m_origine; }
+	double fov()     const { return m_fov; }
+	double focus()   const { return m_focus; }
 
 	Ray ray(int, int, double) const;
 };

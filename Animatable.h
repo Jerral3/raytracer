@@ -12,11 +12,11 @@ public:
 	Animatable(): m_animations{} {}
     virtual ~Animatable() = default;
 
-	void addAnimation(Animation* a) { m_animations.push_back(a); }
+	void   addAnimation(Animation* a) { m_animations.push_back(a); }
     Vector translation(double) const;
-    Point rotation(const Point&, double) const;
+    Point  rotation(const Point&, double) const;
     Matrix rotation(double) const;
-    Point invrot(const Point&, double) const;
+    Point  invrot(const Point&, double) const;
     Matrix invrot(double) const;
 
 };

@@ -12,6 +12,8 @@ class Vector {
 public:
 	Vector(double x = 0, double y = 0, double z = 0): m_x{x}, m_y{y}, m_z{z} {}
 
+	static Vector randomVector();
+
 	Vector& operator+=(const Vector& v) { m_x += v.m_x, m_y += v.m_y, m_z += v.m_z; return *this; }
 	Vector& operator-=(const Vector& v) { m_x -= v.m_x, m_y -= v.m_y, m_z -= v.m_z; return *this; }
 	Vector& operator*=(const double l) { m_x *= l,   m_y *= l,   m_z *= l;   return *this;  }

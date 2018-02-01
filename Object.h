@@ -18,6 +18,9 @@ protected:
 	bool   m_emissive;
 	double m_intensity;
 
+	double m_ks;
+	double m_phong;
+
 public:
 	virtual Vector normal(const Point&) const = 0;
     virtual double intersect(const Point&, const Vector&, Intersection&) const = 0;
@@ -25,7 +28,7 @@ public:
     virtual Point center() const = 0;
     virtual Point randomPointAround(const Vector&) const = 0;
 
-    Object(Color color = Color::black()): Animatable(), m_color{color}, m_mirror{false}, m_transparency{false}, m_indice{1.}, m_diffuse{false}, m_emissive{false}, m_intensity{0.} {}
+    Object(Color color = Color::black()): Animatable(), m_color{color}, m_mirror{false}, m_transparency{false}, m_indice{1.}, m_diffuse{false}, m_emissive{false}, m_intensity{0.}, m_ks{0.3}, m_phong{100} {}
     virtual ~Object() = default;
 
     void makeSpecular() { m_mirror = false, m_transparency = false, m_diffuse = false, m_emissive = false; }
@@ -41,6 +44,8 @@ public:
     bool isDiffuse() const { return m_diffuse; }
     bool isEmissive() const { return m_emissive; }
     double intensity() const { return m_intensity / area(); }
+    double ks() const { return m_ks; }
+    double phongExp() const { return m_phong; }
 
     Base baseAt(Vector) const;
     Vector monteCarloVector(const Vector&) const;
