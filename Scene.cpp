@@ -67,11 +67,3 @@ void Scene::setTimeWithStep(int step)
 		setTime((double)step/TIME_STEPS);
 #endif
 }
-
-double Scene::extinction(const Point& origine, const Point& intersection) const
-{
-	double integrale = m_atmosphere.density() * std::sqrt(squaredNorm(intersection - origine));
-
-	return std::exp(-integrale);
-}
-

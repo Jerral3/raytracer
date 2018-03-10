@@ -65,7 +65,7 @@ Mesh::Mesh(std::string filename, std::string texture, Point origine, double scal
 		}
 
 		if (firstCharacter == 'f') {
-			std::string t1, t2, t3, token;
+			std::string t1, t2, t3;
 			iss >> t1 >> t2 >> t3;
 			std::istringstream s1{t1}, s2{t2}, s3{t3};
 
@@ -110,7 +110,12 @@ double Mesh::intersect(const Point& origine, const Vector& direction, Intersecti
 	double t = m_box.intersect(origine, direction, intersection, &texture);
 
 	intersection.intersected = this;
-	intersection.color       = getColorTexture(texture);
+
+#if TEXTURE == 1
+	intersection.color = getColorTexture(texture);
+#else
+	intersection.color = color(intersection.normale);
+#endif
 
 	return t;
 }

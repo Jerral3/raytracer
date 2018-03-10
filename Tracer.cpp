@@ -126,21 +126,16 @@ Color Tracer::getColor(const Ray& ray, const Light* light,  int r) const
 #endif
 	}
 
-#if ATMOSPHERE == 1
-	color *= extinction(ray.getDirection(), intersection.intersection);
-	
-	Ray contrib = ray;
-	double facteur = contribution(ray.getOrigine(), intersection.intersection, &contrib);
-
-	color += facteur *  getColor(contrib, light, r - 1);
-#endif
-
 	return color;
 }
 
 double Tracer::directLighting(const Vector& normal, const Point& intersection, const Light* light) const
 {
 	double intensity = m_scene.intensity(normal, intersection, light);
+
+#if SHADOW != 1
+	return intensity;
+#endif
 
 	Intersection nextIntersection;
 	Point origine = intersection + EPSILON*normal;
@@ -262,30 +257,6 @@ Color Tracer::roulette(const Ray& ray, const Light* light, int r) const
 #endif
 
 	return facteur * getColor(ray, light, --r);
-}
-
-double Tracer::extinction(const Point& origine, const Point& intersection) const
-{
-	return  m_scene.extinction(origine, intersection);
-}
-
-double Tracer::contribution(const Point& origine, const Point& intersection, Ray* retRay) const
-{
-	double longueur = std::sqrt(squaredNorm(intersection - origine));
-	
-	double distance  = distrib(engine) * longueur;
-	double integrale = m_scene.atmosphere().density() * distance;
-	double phase     = 0.3 / (4*M_PI);
-
-	Vector direction = Vector();
-	Point point      = origine + distance*(intersection - origine);
-
-	direction = Vector::randomVector();
-	double proba = 1/distance;
-
-	*retRay = Ray(point, direction);
-
-	return (phase * m_scene.atmosphere().density() * std::exp(-integrale) / (proba*4*M_PI));
 }
 
 void Tracer::save(const char* filename, int step) const // (0,0) is top-left corner

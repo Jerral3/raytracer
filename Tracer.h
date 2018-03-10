@@ -33,9 +33,6 @@ public:
 	Color roulette(const Ray&, const Light*, int) const;
 	double phong(const Vector&, const Vector&, const Vector&, double) const; 
 
-	double extinction(const Point&, const Point&) const;
-	double contribution(const Point&, const Point&, Ray*) const;
-
 	void save(const char* filename, int step) const;
 };
 

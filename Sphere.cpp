@@ -84,7 +84,7 @@ double Sphere::intersect(const Point& origine, const Vector& direction, Intersec
 
 	intersection.intersection = point;
 	intersection.normale      = normal(point);
-	intersection.color        = m_color;
+	intersection.color        = color(intersection.normale);
 	intersection.intersected  = this;
 
 	return t;

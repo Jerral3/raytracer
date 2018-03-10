@@ -2,6 +2,7 @@
 
 #include "Vector.h"
 #include "Intersection.h"
+#include "config.h"
 
 #include <cmath>
 
@@ -41,7 +42,13 @@ double Triangle::intersect(const Point& origine, const Vector& direction, Inters
 		return -1.;
 
 	intersection.intersection = origine + t*direction;
+
+#if LISSAGE == 1
 	intersection.normale      = alpha*m_nA + beta*m_nB + gamma*m_nC;
+#else
+    intersection.normale      = 1/3*m_nA + 1/3*m_nB + 1/3*m_nC; 
+#endif
+
 	*texture = alpha*m_tA + beta*m_tB + gamma*m_tC;
 
 	return t;

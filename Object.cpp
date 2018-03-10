@@ -6,6 +6,14 @@
 static std::default_random_engine engine;
 static std::uniform_real_distribution<double> distrib(0,1);
 
+Color Object::color(Vector normale) const
+{
+	if (normale == Vector())
+		return m_color;
+
+	return m_texture(normale) * m_color;
+}
+
 /* assume x is normalized */
 Base Object::baseAt(Vector x) const
 {
@@ -48,3 +56,5 @@ Vector Object::phongVector(const Vector& direction, double phong) const
 
 	return x*std::get<2>(base) + y*std::get<1>(base) + z*std::get<0>(base);
 }
+
+Color one(const Vector&) { return Color::white(); }

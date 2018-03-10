@@ -36,9 +36,8 @@ Ray Camera::ray(int i, int j, double t) const
 	double aperture_x = CAMERA_FIELD * (distrib(engine) - 0.5);
 	double aperture_y = CAMERA_FIELD * (distrib(engine) - 0.5);
 
+	Point destination = origine + m_focus * direction;
 	origine += Vector(aperture_x, aperture_y, 0.); 
-	
-	Vector destination = origine + m_focus * directionRay;
 	direction = destination - origine;
 #endif
 
