@@ -34,7 +34,7 @@ public:
     virtual Point center() const = 0;
     virtual Point randomPointAround(const Vector&) const = 0;
 
-    Object(Color color = Color::black()): Animatable(), m_color{color}, m_mirror{false}, m_transparency{false}, m_indice{1.}, m_diffuse{false}, m_emissive{false}, m_intensity{0.}, m_ks{0.3}, m_phong{100}, m_texture{one} {}
+    Object(Color color = Color::black()): Animatable(), m_color{color}, m_mirror{false}, m_transparency{false}, m_indice{1.}, m_diffuse{false}, m_emissive{false}, m_intensity{0.}, m_ks{0.2}, m_phong{20}, m_texture{one} {}
     virtual ~Object() = default;
 
     void makeSpecular() { m_mirror = false, m_transparency = false, m_diffuse = false, m_emissive = false; }

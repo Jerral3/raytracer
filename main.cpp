@@ -21,11 +21,11 @@ Color texture(const Vector& normale)
 
 int main(void)
 {
-	double intensity = 1000000000;
+	double intensity = 4000000000;
 	double radius = 10.;
 
-	//Sphere lum    = Sphere::Emissive(Point(-10, 20, 40), 10, Color::white(), intensity);
-	Sphere sphere = Sphere::Diffuse(Point(0, 0, 10), radius, Color::white());
+	Sphere lum    = Sphere::Emissive(Point(-10, -13, 60), 5, Color::white(), intensity);
+	Sphere sphere = Sphere::Diffuse(Point(0, 10, 20), radius, Color::white());
 	//sphere.addTexture(texture);
 	//sphere.addAnimation(new Translation(Vector(80., 0., 0.), 0., 1.));
 
@@ -34,17 +34,17 @@ int main(void)
 	Sphere mur3 = Sphere::Diffuse(Point(0, -1000, 0), 990, Color::red());
 	Sphere mur4 = Sphere::Diffuse(Point(0, 0, 1000), 940, Color(0.3, 0.3, 0.3));
 
-	//Mesh mesh = Mesh("rex.obj", "Texture.bmp", Point(0., -15.5, 0.), 0.07, Color::white());
+	Mesh mesh = Mesh("rex.obj", "Texture.bmp", Point(0., -15.5, 0.), 0.07, Color::white());
 	//mesh.addTexture(texture);
 	//mesh.addAnimation(new Rotation(mesh.getCenter(), 0, -360, 0, 0, 1));
 
-	std::vector<Object*> spheres {&sphere, &mur1, &mur2, &mur3, &mur4};
+	//std::vector<Object*> spheres {&sphere, &mur1, &mur2, &mur3, &mur4};
 	//std::vector<Object*> spheres {&mesh, &mur1, &mur2, &mur3, &mur4};
-	//std::vector<Object*> spheres {&lum, &sphere, &mur1, &mur2, &mur3, &mur4};
+	std::vector<Object*> spheres {&lum, &mesh, &mur1, &mur2, &mur3, &mur4};
 
-	std::vector<Light*> lights { new Light(Point(-10, 20, 40), intensity) };
+	//std::vector<Light*> lights { new Light(Point(-10, 20, 40), intensity) };
 	//std::vector<Light*> lights { new Light(Point(-10, 20, 40), intensity) , new Light(Point(10, 20, 40), intensity) };
-	//std::vector<Light*> lights {};
+	std::vector<Light*> lights {};
 
 	Scene scene = Scene(lights, spheres);
 

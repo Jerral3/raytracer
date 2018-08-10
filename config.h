@@ -8,14 +8,14 @@
 
 #define SHADOW           1
 #define CORRECTION_GAMMA 1
-#define ANTIALIASING     0
+#define ANTIALIASING     1
 #define ROULETTE         0
 #define FRESNEL          0
 #define CAMERA_MODEL     0
 #define MOTION_BLUR      0
 #define PHONG            0
-#define LISSAGE          0
-#define TEXTURE          0
+#define LISSAGE          1
+#define TEXTURE          1
 
 #define RECURSION_LEVEL 3
 #define RECURSION_BOXES 30
